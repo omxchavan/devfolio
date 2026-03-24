@@ -1,65 +1,138 @@
-import Image from "next/image";
+import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button-variants";
+import { ProjectCard } from "@/components/project-card";
+import { connectDB } from "@/lib/db";
+import Project from "@/models/Project";
+import { IProject } from "@/types";
+import { ArrowRight, Code2, Rocket, Users } from "lucide-react";
 
-export default function Home() {
+async function getFeaturedProjects() {
+  await connectDB();
+  const projects = await Project.find()
+    .sort({ stars: -1, createdAt: -1 })
+    .limit(6)
+    .populate("owner", "name image githubUsername")
+    .lean();
+  
+  // Serialize Mongoose docs
+  return JSON.parse(JSON.stringify(projects)) as IProject[];
+}
+
+export default async function Home() {
+  const featuredProjects = await getFeaturedProjects();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="flex flex-col gap-16 pb-16">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-background pt-24 pb-32">
+        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:60px_60px]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex flex-col items-center text-center space-y-8 max-w-3xl mx-auto">
+            <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
+              <span className="flex h-2 w-2 rounded-full bg-primary mr-2"></span>
+              The platform for student builders
+            </div>
+            
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">
+              Showcase your work to the <span className="text-primary">world</span>
+            </h1>
+            
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">
+              Devfolio automatically syncs with GitHub to display your projects,
+              find your contributors, and build your developer portfolio in seconds.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
+              <Link
+                href="/create-project"
+                className={buttonVariants({ size: "lg", className: "w-full sm:w-auto gap-2" })}
+              >
+                <Rocket className="h-4 w-4" />
+                Add Your Project
+              </Link>
+              <Link
+                href="/explore"
+                className={buttonVariants({ size: "lg", variant: "outline", className: "w-full sm:w-auto gap-2" })}
+              >
+                Explore Projects
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Features */}
+      <section className="container mx-auto px-4">
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="flex flex-col items-center text-center p-6 space-y-4 rounded-2xl bg-muted/50">
+            <div className="p-3 rounded-full bg-primary/10 text-primary">
+              <Code2 className="h-6 w-6" />
+            </div>
+            <h3 className="text-xl font-semibold">GitHub Sync</h3>
+            <p className="text-muted-foreground">
+              We automatically fetch your repository details, tech stack, and README data.
+            </p>
+          </div>
+          <div className="flex flex-col items-center text-center p-6 space-y-4 rounded-2xl bg-muted/50">
+            <div className="p-3 rounded-full bg-primary/10 text-primary">
+              <Users className="h-6 w-6" />
+            </div>
+            <h3 className="text-xl font-semibold">Auto-Contributors</h3>
+            <p className="text-muted-foreground">
+              Contributors are automatically detected and linked to their devfolio profiles.
+            </p>
+          </div>
+          <div className="flex flex-col items-center text-center p-6 space-y-4 rounded-2xl bg-muted/50">
+            <div className="p-3 rounded-full bg-primary/10 text-primary">
+              <Rocket className="h-6 w-6" />
+            </div>
+            <h3 className="text-xl font-semibold">Beautiful Portfolios</h3>
+            <p className="text-muted-foreground">
+              Get a stunning, shareable developer portfolio page right out of the box.
+            </p>
+          </div>
         </div>
-      </main>
+      </section>
+
+      {/* Featured Projects */}
+      <section className="container mx-auto px-4 space-y-8">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h2 className="text-3xl font-bold tracking-tight">Featured Projects</h2>
+            <p className="text-muted-foreground">Top rated projects from the community.</p>
+          </div>
+          <Link
+            href="/explore"
+            className={buttonVariants({ variant: "ghost", className: "hidden sm:flex" })}
+          >
+            View all {">"}
+          </Link>
+        </div>
+
+        {featuredProjects.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featuredProjects.map((project) => (
+              <ProjectCard key={project._id.toString()} project={project as any} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 bg-muted/30 rounded-2xl border border-dashed">
+            <p className="text-muted-foreground">No projects found. Be the first to add one!</p>
+          </div>
+        )}
+        
+        <div className="sm:hidden flex justify-center pt-4">
+          <Link
+            href="/explore"
+            className={buttonVariants({ variant: "ghost" })}
+          >
+            View all projects {">"}
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

@@ -51,13 +51,18 @@ export const authOptions: NextAuthOptions = {
       }
     },
 
-    async jwt({ token, profile }) {
+    async jwt({ token, profile, trigger, session }) {
+      if (trigger === "update" && session?.onboarded !== undefined) {
+        token.onboarded = session.onboarded;
+      }
+
       if (profile?.login) {
         await connectDB();
         const user = await User.findOne({ githubUsername: profile.login });
         if (user) {
           token.id = user._id.toString();
           token.githubUsername = profile.login;
+          token.onboarded = user.onboarded;
         }
       }
       return token;
@@ -69,6 +74,9 @@ export const authOptions: NextAuthOptions = {
       }
       if (token.githubUsername) {
         session.user.githubUsername = token.githubUsername as string;
+      }
+      if (token.onboarded !== undefined) {
+        session.user.onboarded = token.onboarded as boolean;
       }
       return session;
     },

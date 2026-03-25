@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
+import Project from "@/models/Project";
 
 export async function GET(
   _request: Request,
@@ -13,7 +14,8 @@ export async function GET(
     const user = await User.findOne({ githubUsername: username })
       .populate({
         path: "projects",
-        populate: { path: "owner", select: "name image githubUsername" },
+        model: Project,
+        populate: { path: "owner", model: User, select: "name image githubUsername" },
       })
       .lean();
 

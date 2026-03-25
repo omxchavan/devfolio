@@ -51,7 +51,7 @@ export async function GET(request: Request) {
         .sort(sort)
         .skip(skip)
         .limit(query.limit)
-        .populate("owner", "name image githubUsername")
+        .populate({ path: "owner", model: User, select: "name image githubUsername" })
         .lean(),
       Project.countDocuments(filter),
     ]);

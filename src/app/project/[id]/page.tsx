@@ -1,12 +1,15 @@
 import { notFound } from "next/navigation";
 import { connectDB } from "@/lib/db";
 import Project from "@/models/Project";
+import User from "@/models/User";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import { GitPullRequest, Globe, Star, Users, FolderGit2, Calendar } from "lucide-react";
+import { GitPullRequest, Globe, Star, Users, FolderGit2, Calendar, Edit } from "lucide-react";
 import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { sanitizeText } from "@/lib/sanitize";
 import { IProject, IUser } from "@/types";
 
@@ -20,7 +23,7 @@ async function getProjectData(id: string) {
   try {
     await connectDB();
     const project = await Project.findById(id)
-      .populate("owner", "name image githubUsername bio socialLinks")
+      .populate({ path: "owner", model: User, select: "name image githubUsername bio socialLinks" })
       .lean();
 
     if (!project) return null;
@@ -31,6 +34,7 @@ async function getProjectData(id: string) {
 }
 
 export default async function ProjectPage(props: ProjectPageProps) {
+  const session = await getServerSession(authOptions);
   const params = await props.params;
   const project = await getProjectData(params.id);
 
@@ -40,6 +44,7 @@ export default async function ProjectPage(props: ProjectPageProps) {
 
   // Find owner in contributors list if they exist there to avoid rendering them twice in the team list
   const owner = project.owner as IUser;
+  const isOwner = session?.user?.id === (owner as any)._id?.toString();
   const teamMembers = project.contributors?.filter(
     (c: any) => c.githubUsername !== owner.githubUsername
   ) || [];
@@ -81,6 +86,12 @@ export default async function ProjectPage(props: ProjectPageProps) {
                 <Link href={project.liveLink} target="_blank" rel="noopener noreferrer" className={buttonVariants({ variant: "outline", size: "lg", className: "w-full sm:w-auto gap-2" })}>
                   <Globe className="h-5 w-5" />
                   Visit Live Demo
+                </Link>
+              )}
+              {isOwner && (
+                <Link href={`/project/${project._id}/edit`} className={buttonVariants({ variant: "outline", size: "lg", className: "w-full sm:w-auto gap-2" })}>
+                  <Edit className="h-5 w-5" />
+                  Edit Project
                 </Link>
               )}
             </div>

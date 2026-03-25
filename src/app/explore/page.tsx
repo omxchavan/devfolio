@@ -4,6 +4,7 @@ import { SearchBar } from "@/components/search-bar";
 import { ProjectCard } from "@/components/project-card";
 import { connectDB } from "@/lib/db";
 import Project from "@/models/Project";
+import User from "@/models/User";
 import { IProject } from "@/types";
 import { searchQuerySchema } from "@/lib/validations";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -42,7 +43,7 @@ async function getFilteredProjects(searchParams: { [key: string]: string | undef
   const projects = await Project.find(filter)
     .sort(sort)
     .limit(50) // Hard limit for MVP
-    .populate("owner", "name image githubUsername")
+    .populate({ path: "owner", model: User, select: "name image githubUsername" })
     .lean();
 
   return JSON.parse(JSON.stringify(projects)) as IProject[];

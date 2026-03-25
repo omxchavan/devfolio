@@ -3,6 +3,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { ProjectCard } from "@/components/project-card";
 import { connectDB } from "@/lib/db";
 import Project from "@/models/Project";
+import User from "@/models/User";
 import { IProject } from "@/types";
 import { ArrowRight, Code2, Rocket, Users } from "lucide-react";
 
@@ -11,7 +12,7 @@ async function getFeaturedProjects() {
   const projects = await Project.find()
     .sort({ stars: -1, createdAt: -1 })
     .limit(6)
-    .populate("owner", "name image githubUsername")
+    .populate({ path: "owner", model: User, select: "name image githubUsername" })
     .lean();
   
   // Serialize Mongoose docs

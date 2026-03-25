@@ -31,10 +31,12 @@ export interface IUser {
   email: string;
   image: string;
   githubUsername: string;
+  onboarded: boolean;
   bio?: string;
   socialLinks?: {
     github?: string;
     linkedin?: string;
+    twitter?: string;
     portfolio?: string;
   };
   projects: any[]; // IDs or IProjects

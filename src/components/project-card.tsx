@@ -7,6 +7,8 @@ import { IProject, IUser } from "@/types";
 
 interface ProjectCardProps {
   project: IProject;
+  variant?: "default" | "minimal";
+  showOwner?: boolean;
 }
 
 const domainColors: Record<string, string> = {
@@ -22,111 +24,114 @@ const domainColors: Record<string, string> = {
   Other: "bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20",
 };
 
-export function ProjectCard({ project }: ProjectCardProps) {
-  return (
-    <Link href={`/project/${project._id}`}>
-      <Card className="group h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 hover:border-primary/20">
-        {/* Image */}
-        <div className="relative aspect-[16/10] overflow-hidden bg-muted">
-          {project.images?.[0] ? (
-            <img
-              src={project.images[0].replace("/upload/", "/upload/c_fill,g_north,ar_16:10,w_800,q_auto,f_auto/")}
-              alt={project.title}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
-              <GitPullRequest className="h-12 w-12 text-muted-foreground/30" />
-            </div>
-          )}
-          <div className="absolute top-2 right-2">
-            <Badge
-              variant="outline"
-              className={`text-xs backdrop-blur-sm ${domainColors[project.domain] || domainColors.Other}`}
-            >
-              {project.domain}
-            </Badge>
-          </div>
-        </div>
+export function ProjectCard({ 
+  project, 
+  variant = "default", 
+  showOwner = true 
+}: ProjectCardProps) {
+  const isMinimal = variant === "minimal";
 
-        <CardContent className="space-y-3 p-4">
+  return (
+    <div className={`group h-full flex flex-col overflow-hidden rounded-xl border bg-card transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 hover:border-primary/20 ${isMinimal ? "max-w-sm" : ""}`}>
+      {/* Project Image & Link */}
+      <Link href={`/project/${project._id}`} className={`block relative overflow-hidden bg-muted ${isMinimal ? "aspect-[2.4/1]" : "aspect-[16/10]"}`}>
+        {project.images?.[0] ? (
+          <img
+            src={project.images[0].includes("cloudinary.com") 
+              ? project.images[0].replace("/upload/", `/upload/c_fill,g_center,ar_${isMinimal ? "2.4" : "1.6"},w_${isMinimal ? "600" : "1200"},q_auto,f_auto/`)
+              : project.images[0]
+            }
+            alt={project.title}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
+            <GitPullRequest className={`${isMinimal ? "h-6 w-6" : "h-12 w-12"} text-muted-foreground/30`} />
+          </div>
+        )}
+        <div className="absolute top-2 right-2">
+          <Badge
+            variant="outline"
+            className={`${isMinimal ? "text-[8px] h-4 px-1" : "text-[10px] h-5"} backdrop-blur-sm ${domainColors[project.domain] || domainColors.Other}`}
+          >
+            {project.domain}
+          </Badge>
+        </div>
+      </Link>
+
+      <div className="flex flex-col flex-1">
+        <CardContent className={`space-y-1.5 flex-1 ${isMinimal ? "p-3" : "p-4"}`}>
           {/* Title */}
-          <h3 className="font-semibold text-base leading-tight line-clamp-1 group-hover:text-primary transition-colors">
-            {project.title}
-          </h3>
+          <Link href={`/project/${project._id}`}>
+            <h3 className={`font-semibold leading-tight line-clamp-1 group-hover:text-primary transition-colors ${isMinimal ? "text-[13px]" : "text-base"}`}>
+              {project.title}
+            </h3>
+          </Link>
 
           {/* Description */}
-          <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+          <p className={`text-muted-foreground line-clamp-2 leading-relaxed ${isMinimal ? "text-[11px] opacity-80" : "text-sm"}`}>
             {project.description}
           </p>
 
           {/* Tech Stack */}
           {project.techStack?.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {project.techStack.slice(0, 4).map((tech) => (
+            <div className="flex flex-wrap gap-1 pt-1">
+              {project.techStack.slice(0, isMinimal ? 3 : 4).map((tech) => (
                 <Badge
                   key={tech}
                   variant="secondary"
-                  className="text-[10px] font-medium px-1.5 py-0"
+                  className="text-[9px] font-medium px-1.5 py-0 h-4"
                 >
                   {tech}
                 </Badge>
               ))}
-              {project.techStack.length > 4 && (
-                <Badge
-                  variant="secondary"
-                  className="text-[10px] font-medium px-1.5 py-0"
-                >
-                  +{project.techStack.length - 4}
-                </Badge>
-              )}
-            </div>
-          )}
-
-          {/* Tags */}
-          {project.tags?.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {project.tags.slice(0, 3).map((tag) => (
-                <span
-                  key={tag}
-                  className="text-[11px] text-muted-foreground/70"
-                >
-                  #{tag}
+              {project.techStack.length > (isMinimal ? 3 : 4) && (
+                <span className="text-[10px] text-muted-foreground px-1 self-center">
+                  +{project.techStack.length - (isMinimal ? 3 : 4)}
                 </span>
-              ))}
+              )}
             </div>
           )}
         </CardContent>
 
-        <CardFooter className="flex items-center justify-between border-t p-4 pt-3">
-          {/* Owner */}
-          <div className="flex items-center gap-2">
-            <Avatar className="h-6 w-6">
-              <AvatarImage
-                src={(project.owner as IUser)?.image}
-                alt={(project.owner as IUser)?.name}
-              />
-              <AvatarFallback className="text-xs">
-                {(project.owner as IUser)?.name?.charAt(0)?.toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <span className="text-xs text-muted-foreground truncate max-w-[100px]">
-              {(project.owner as IUser)?.name}
-            </span>
-          </div>
-
-          {/* Stats */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 text-muted-foreground">
-              <Star className="h-3.5 w-3.5" />
-              <span className="text-xs font-medium">{project.stars}</span>
-            </div>
-            {project.liveLink && (
-              <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+        {(showOwner || project.stars > 0) && (
+          <CardFooter className={`flex items-center justify-between border-t p-3 ${isMinimal ? "pt-2 pb-2 px-3" : "pt-3"}`}>
+            {/* Owner */}
+            {showOwner ? (
+              <Link 
+                href={`/profile/${(project.owner as IUser)?.githubUsername}`}
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              >
+                <Avatar className={`${isMinimal ? "h-5 w-5" : "h-6 w-6"}`}>
+                  <AvatarImage
+                    src={(project.owner as IUser)?.image}
+                    alt={(project.owner as IUser)?.name}
+                  />
+                  <AvatarFallback className="text-[10px]">
+                    {(project.owner as IUser)?.name?.charAt(0)?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className={`text-muted-foreground truncate max-w-[80px] hover:text-primary transition-colors ${isMinimal ? "text-[11px]" : "text-xs"}`}>
+                  {(project.owner as IUser)?.name}
+                </span>
+              </Link>
+            ) : (
+              <div />
             )}
-          </div>
-        </CardFooter>
-      </Card>
-    </Link>
+
+            {/* Stats */}
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <Star className={`${isMinimal ? "h-3 w-3" : "h-3.5 w-3.5"}`} />
+                <span className={`${isMinimal ? "text-[11px]" : "text-xs"} font-medium`}>{project.stars}</span>
+              </div>
+              {project.liveLink && (
+                <ExternalLink className={`${isMinimal ? "h-3 w-3" : "h-3.5 w-3.5"} text-muted-foreground`} />
+              )}
+            </div>
+          </CardFooter>
+        )}
+      </div>
+    </div>
   );
 }

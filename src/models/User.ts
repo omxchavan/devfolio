@@ -14,10 +14,12 @@ const UserSchema = new Schema<IUser>(
     email: { type: String, required: true, unique: true },
     image: { type: String, default: "" },
     githubUsername: { type: String, required: true, unique: true, index: true },
+    onboarded: { type: Boolean, default: false },
     bio: { type: String, default: "", maxlength: 500 },
     socialLinks: {
       github: { type: String, default: "" },
       linkedin: { type: String, default: "" },
+      twitter: { type: String, default: "" },
       portfolio: { type: String, default: "" },
     },
     projects: [{ type: Schema.Types.ObjectId, ref: "Project" }],

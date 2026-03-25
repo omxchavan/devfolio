@@ -16,24 +16,29 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DOMAINS } from "@/lib/constants";
-import { createProjectSchema } from "@/lib/validations";
+import { createProjectSchema, updateProjectSchema } from "@/lib/validations";
 import { Loader2, Plus, X, Upload, Link as LinkIcon, GitPullRequest } from "lucide-react";
 import { toast } from "sonner";
+import { IProject } from "@/types";
 
-export function ProjectForm() {
+interface ProjectFormProps {
+  initialData?: IProject;
+}
+
+export function ProjectForm({ initialData }: ProjectFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [tagInput, setTagInput] = useState("");
   const [imageUploading, setImageUploading] = useState(false);
 
   const [form, setForm] = useState({
-    title: "",
-    description: "",
-    domain: "" as string,
-    githubRepo: "",
-    liveLink: "",
-    tags: [] as string[],
-    images: [] as string[],
+    title: initialData?.title || "",
+    description: initialData?.description || "",
+    domain: initialData?.domain || ("" as string),
+    githubRepo: initialData?.githubRepo || "",
+    liveLink: initialData?.liveLink || "",
+    tags: initialData?.tags || ([] as string[]),
+    images: initialData?.images || ([] as string[]),
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -99,7 +104,8 @@ export function ProjectForm() {
     setErrors({});
 
     // Validate
-    const result = createProjectSchema.safeParse(form);
+    const schema = initialData ? updateProjectSchema : createProjectSchema;
+    const result = schema.safeParse(form);
     if (!result.success) {
       const fieldErrors: Record<string, string> = {};
       result.error.issues.forEach((err) => {
@@ -112,19 +118,25 @@ export function ProjectForm() {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/projects", {
-        method: "POST",
+      const url = initialData ? `/api/projects/${initialData._id}` : "/api/projects";
+      const method = initialData ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Failed to create project");
+        throw new Error(data.error || `Failed to ${initialData ? "update" : "create"} project`);
       }
 
-      toast.success("Project created successfully!");
-      router.push("/dashboard");
+      toast.success(`Project ${initialData ? "updated" : "created"} successfully!`);
+      if (initialData) {
+        router.push(`/project/${initialData._id}`);
+      } else {
+        router.push("/dashboard");
+      }
       router.refresh();
     } catch (error) {
       toast.error(
@@ -375,7 +387,6 @@ export function ProjectForm() {
         </CardContent>
       </Card>
 
-      {/* Submit */}
       <Button
         type="submit"
         size="lg"
@@ -385,10 +396,10 @@ export function ProjectForm() {
         {loading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Creating project...
+            {initialData ? "Updating project..." : "Creating project..."}
           </>
         ) : (
-          "Create Project"
+          initialData ? "Update Project" : "Create Project"
         )}
       </Button>
     </form>

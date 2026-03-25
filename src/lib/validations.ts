@@ -33,6 +33,8 @@ export const createProjectSchema = z.object({
     .default([]),
 });
 
+export const updateProjectSchema = createProjectSchema.partial();
+
 export const updateProfileSchema = z.object({
   bio: z
     .string()
@@ -41,8 +43,21 @@ export const updateProfileSchema = z.object({
     .optional(),
   socialLinks: z
     .object({
-      github: z.string().url("Must be a valid URL").optional(),
       linkedin: urlSchema,
+      twitter: urlSchema,
+      portfolio: urlSchema,
+    })
+    .optional(),
+});
+
+export const onboardingSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters").max(50).trim(),
+  email: z.string().email("Must be a valid email").trim(),
+  bio: z.string().max(500, "Bio must be under 500 characters").trim().optional(),
+  socialLinks: z
+    .object({
+      linkedin: urlSchema,
+      twitter: urlSchema,
       portfolio: urlSchema,
     })
     .optional(),
@@ -58,5 +73,7 @@ export const searchQuerySchema = z.object({
 });
 
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;
+export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type OnboardingInput = z.infer<typeof onboardingSchema>;
 export type SearchQueryInput = z.infer<typeof searchQuerySchema>;

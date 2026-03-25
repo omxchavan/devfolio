@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
+import Project from "@/models/Project";
 import { updateProfileSchema } from "@/lib/validations";
 import { sanitizeUserContent } from "@/lib/sanitize";
 
@@ -18,7 +19,8 @@ export async function GET() {
     const user = await User.findById(session.user.id)
       .populate({
         path: "projects",
-        populate: { path: "owner", select: "name image githubUsername" },
+        model: Project,
+        populate: { path: "owner", model: User, select: "name image githubUsername" },
       })
       .lean();
 
@@ -51,15 +53,13 @@ export async function PUT(request: Request) {
       validated as unknown as Record<string, unknown>
     );
 
-    const user = await User.findByIdAndUpdate(
-      session.user.id,
-      { $set: sanitized },
-      { new: true, runValidators: true }
-    ).lean();
-
+    const user = await User.findById(session.user.id);
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
+
+    user.set(sanitized);
+    await user.save();
 
     return NextResponse.json(user);
   } catch (error) {

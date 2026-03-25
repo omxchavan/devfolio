@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import Project from "@/models/Project";
+import User from "@/models/User";
 import { IProject } from "@/types";
 import { ProjectCard } from "@/components/project-card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ async function getUserProjects(userId: string) {
   await connectDB();
   const projects = await Project.find({ owner: userId })
     .sort({ createdAt: -1 })
-    .populate("owner", "name image githubUsername")
+    .populate({ path: "owner", model: User, select: "name image githubUsername" })
     .lean();
   
   return JSON.parse(JSON.stringify(projects)) as IProject[];

@@ -27,7 +27,7 @@ export default function RootLayout({
             attribute="class"
             defaultTheme="system"
             enableSystem
-            disableTransitionOnChange
+            
           >
             <Navbar />
             <main className="flex-1">{children}</main>

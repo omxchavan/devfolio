@@ -3,9 +3,8 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { DOMAINS } from "@/lib/constants";
-import { SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, X, ArrowDownWideNarrow } from "lucide-react";
 
 const POPULAR_TAGS = [
   "react",
@@ -61,91 +60,98 @@ export function FilterSidebar() {
   const hasFilters = currentDomain || currentTags.length > 0 || currentSort !== "latest";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4" />
-          <h3 className="font-semibold text-sm">Filters</h3>
+          <SlidersHorizontal className="h-4 w-4 text-primary" />
+          <h3 className="font-bold text-sm">Filters</h3>
         </div>
         {hasFilters && (
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
             onClick={clearAll}
-            className="h-7 text-xs gap-1"
+            className="text-xs text-muted-foreground hover:text-destructive font-medium flex items-center gap-1 transition-colors"
           >
             <X className="h-3 w-3" />
             Clear
-          </Button>
+          </button>
         )}
       </div>
 
-      <Separator />
+      <div className="h-0.5 bg-foreground/5 dark:bg-border/30 rounded-full" />
 
       {/* Sort */}
-      <div className="space-y-2">
-        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          Sort by
+      <div className="space-y-2.5">
+        <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+          <ArrowDownWideNarrow className="h-3 w-3" />
+          Sort
         </h4>
         <div className="flex gap-2">
           {[
             { value: "latest", label: "Latest" },
-            { value: "stars", label: "Most Stars" },
+            { value: "stars", label: "Top ★" },
           ].map((sort) => (
-            <Button
+            <button
               key={sort.value}
-              variant={currentSort === sort.value ? "default" : "outline"}
-              size="sm"
-              className="h-7 text-xs"
+              className={`neo-badge rounded-lg px-3 py-1.5 text-xs cursor-pointer transition-all duration-200 ${
+                currentSort === sort.value
+                  ? "!bg-foreground !text-background !border-foreground dark:!bg-primary dark:!text-primary-foreground dark:!border-primary"
+                  : "hover:border-primary/50"
+              }`}
               onClick={() => updateParams("sort", sort.value)}
             >
               {sort.label}
-            </Button>
+            </button>
           ))}
         </div>
       </div>
 
-      <Separator />
+      <div className="h-0.5 bg-foreground/5 dark:bg-border/30 rounded-full" />
 
       {/* Domain */}
-      <div className="space-y-2">
-        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+      <div className="space-y-2.5">
+        <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
           Domain
         </h4>
         <div className="flex flex-wrap gap-1.5">
           {DOMAINS.map((domain) => (
-            <Badge
+            <button
               key={domain}
-              variant={currentDomain === domain ? "default" : "outline"}
-              className="cursor-pointer text-xs transition-colors hover:bg-primary hover:text-primary-foreground"
+              className={`neo-badge rounded-lg px-2 py-1 text-[11px] cursor-pointer transition-all duration-200 ${
+                currentDomain === domain
+                  ? "!bg-foreground !text-background !border-foreground dark:!bg-primary dark:!text-primary-foreground dark:!border-primary"
+                  : "hover:border-primary/50"
+              }`}
               onClick={() =>
                 updateParams("domain", currentDomain === domain ? "" : domain)
               }
             >
               {domain}
-            </Badge>
+            </button>
           ))}
         </div>
       </div>
 
-      <Separator />
+      <div className="h-0.5 bg-foreground/5 dark:bg-border/30 rounded-full" />
 
       {/* Tags */}
-      <div className="space-y-2">
-        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          Popular Tags
+      <div className="space-y-2.5">
+        <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+          Tags
         </h4>
         <div className="flex flex-wrap gap-1.5">
           {POPULAR_TAGS.map((tag) => (
-            <Badge
+            <button
               key={tag}
-              variant={currentTags.includes(tag) ? "default" : "outline"}
-              className="cursor-pointer text-xs transition-colors hover:bg-primary hover:text-primary-foreground"
+              className={`neo-badge rounded-lg px-2 py-1 text-[11px] cursor-pointer transition-all duration-200 ${
+                currentTags.includes(tag)
+                  ? "!bg-foreground !text-background !border-foreground dark:!bg-primary dark:!text-primary-foreground dark:!border-primary"
+                  : "hover:border-primary/50"
+              }`}
               onClick={() => toggleTag(tag)}
             >
               #{tag}
-            </Badge>
+            </button>
           ))}
         </div>
       </div>

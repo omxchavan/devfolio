@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, User as UserIcon, LinkIcon } from "lucide-react";
+import { Loader2, User as UserIcon, LinkIcon, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { onboardingSchema } from "@/lib/validations";
 
@@ -33,7 +33,6 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
-      // If already onboarded, redirect away
       if (session.user.onboarded) {
         router.push("/dashboard");
       } else {
@@ -79,7 +78,6 @@ export default function OnboardingPage() {
 
       toast.success("Profile setup complete!");
       
-      // Force session refresh so the middleware sees the new token
       await update({ onboarded: true });
       
       router.push("/dashboard");
@@ -94,122 +92,133 @@ export default function OnboardingPage() {
   if (status === "loading" || initialLoading) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-12 px-4 sm:px-6">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Welcome to Devfolio!</h1>
-        <p className="text-muted-foreground mt-2">Let's set up your profile before you continue.</p>
-      </div>
+    <div className="relative min-h-[calc(100vh-4rem)]">
+      {/* Background effects */}
+      <div className="absolute inset-0 bg-dot-grid" />
+      <div className="gradient-orb w-[400px] h-[400px] bg-primary/30 top-10 -left-20" />
+      <div className="gradient-orb w-[300px] h-[300px] bg-[oklch(0.60_0.22_300_/_30%)] bottom-10 right-0" />
+      
+      <div className="max-w-2xl mx-auto py-12 px-4 sm:px-6 relative z-10">
+        <div className="text-center mb-8 animate-fade-up">
+          <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary backdrop-blur-sm mb-4">
+            <Sparkles className="h-3 w-3 mr-1.5" />
+            Almost there
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight">Welcome to Devfolio!</h1>
+          <p className="text-muted-foreground mt-2">Let&apos;s set up your profile before you continue.</p>
+        </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <UserIcon className="h-5 w-5" />
-              Basic Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
-              <Input
-                id="name"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className={errors.name ? "border-destructive" : ""}
-              />
-              {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className={errors.email ? "border-destructive" : ""}
-              />
-              {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea
-                id="bio"
-                placeholder="Tell us a little about yourself..."
-                value={form.bio}
-                onChange={(e) => setForm({ ...form, bio: e.target.value })}
-                rows={4}
-                className={errors.bio ? "border-destructive" : ""}
-              />
-              <div className="flex justify-between">
-                {errors.bio && <p className="text-xs text-destructive">{errors.bio}</p>}
-                <p className="text-xs text-muted-foreground ml-auto">
-                  {form.bio.length}/500
-                </p>
+        <form onSubmit={handleSubmit} className="space-y-6 animate-fade-up delay-2">
+          <Card className="border-border/30 bg-card/60 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <UserIcon className="h-5 w-5 text-primary/60" />
+                Basic Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Name *</Label>
+                <Input
+                  id="name"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  className={`bg-background/60 border-border/50 focus-visible:ring-primary/20 focus-visible:border-primary/40 ${errors.name ? "border-destructive" : ""}`}
+                />
+                {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
               </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <LinkIcon className="h-5 w-5" />
-              Social Links
-            </CardTitle>
-            <CardDescription>Add your social profiles (optional but recommended)</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="linkedin">LinkedIn Profile</Label>
-              <Input
-                id="linkedin"
-                placeholder="https://linkedin.com/in/username"
-                value={form.socialLinks.linkedin}
-                onChange={(e) => setForm({ ...form, socialLinks: { ...form.socialLinks, linkedin: e.target.value } })}
-                className={errors["socialLinks.linkedin"] ? "border-destructive" : ""}
-              />
-              {errors["socialLinks.linkedin"] && <p className="text-xs text-destructive">{errors["socialLinks.linkedin"]}</p>}
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  className={`bg-background/60 border-border/50 focus-visible:ring-primary/20 focus-visible:border-primary/40 ${errors.email ? "border-destructive" : ""}`}
+                />
+                {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="twitter">Twitter / X Profile</Label>
-              <Input
-                id="twitter"
-                placeholder="https://twitter.com/username"
-                value={form.socialLinks.twitter}
-                onChange={(e) => setForm({ ...form, socialLinks: { ...form.socialLinks, twitter: e.target.value } })}
-                className={errors["socialLinks.twitter"] ? "border-destructive" : ""}
-              />
-              {errors["socialLinks.twitter"] && <p className="text-xs text-destructive">{errors["socialLinks.twitter"]}</p>}
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea
+                  id="bio"
+                  placeholder="Tell us a little about yourself..."
+                  value={form.bio}
+                  onChange={(e) => setForm({ ...form, bio: e.target.value })}
+                  rows={4}
+                  className={`bg-background/60 border-border/50 focus-visible:ring-primary/20 focus-visible:border-primary/40 ${errors.bio ? "border-destructive" : ""}`}
+                />
+                <div className="flex justify-between">
+                  {errors.bio && <p className="text-xs text-destructive">{errors.bio}</p>}
+                  <p className="text-xs text-muted-foreground ml-auto">
+                    {form.bio.length}/500
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-            <div className="space-y-2">
-              <Label htmlFor="portfolio">Personal Portfolio</Label>
-              <Input
-                id="portfolio"
-                placeholder="https://yourwebsite.com"
-                value={form.socialLinks.portfolio}
-                onChange={(e) => setForm({ ...form, socialLinks: { ...form.socialLinks, portfolio: e.target.value } })}
-                className={errors["socialLinks.portfolio"] ? "border-destructive" : ""}
-              />
-              {errors["socialLinks.portfolio"] && <p className="text-xs text-destructive">{errors["socialLinks.portfolio"]}</p>}
-            </div>
-          </CardContent>
-        </Card>
+          <Card className="border-border/30 bg-card/60 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <LinkIcon className="h-5 w-5 text-primary/60" />
+                Social Links
+              </CardTitle>
+              <CardDescription>Add your social profiles (optional but recommended)</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="linkedin">LinkedIn Profile</Label>
+                <Input
+                  id="linkedin"
+                  placeholder="https://linkedin.com/in/username"
+                  value={form.socialLinks.linkedin}
+                  onChange={(e) => setForm({ ...form, socialLinks: { ...form.socialLinks, linkedin: e.target.value } })}
+                  className={`bg-background/60 border-border/50 focus-visible:ring-primary/20 focus-visible:border-primary/40 ${errors["socialLinks.linkedin"] ? "border-destructive" : ""}`}
+                />
+                {errors["socialLinks.linkedin"] && <p className="text-xs text-destructive">{errors["socialLinks.linkedin"]}</p>}
+              </div>
 
-        <Button type="submit" size="lg" className="w-full" disabled={loading}>
-          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Complete Setup
-        </Button>
-      </form>
+              <div className="space-y-2">
+                <Label htmlFor="twitter">Twitter / X Profile</Label>
+                <Input
+                  id="twitter"
+                  placeholder="https://twitter.com/username"
+                  value={form.socialLinks.twitter}
+                  onChange={(e) => setForm({ ...form, socialLinks: { ...form.socialLinks, twitter: e.target.value } })}
+                  className={`bg-background/60 border-border/50 focus-visible:ring-primary/20 focus-visible:border-primary/40 ${errors["socialLinks.twitter"] ? "border-destructive" : ""}`}
+                />
+                {errors["socialLinks.twitter"] && <p className="text-xs text-destructive">{errors["socialLinks.twitter"]}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="portfolio">Personal Portfolio</Label>
+                <Input
+                  id="portfolio"
+                  placeholder="https://yourwebsite.com"
+                  value={form.socialLinks.portfolio}
+                  onChange={(e) => setForm({ ...form, socialLinks: { ...form.socialLinks, portfolio: e.target.value } })}
+                  className={`bg-background/60 border-border/50 focus-visible:ring-primary/20 focus-visible:border-primary/40 ${errors["socialLinks.portfolio"] ? "border-destructive" : ""}`}
+                />
+                {errors["socialLinks.portfolio"] && <p className="text-xs text-destructive">{errors["socialLinks.portfolio"]}</p>}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Button type="submit" size="lg" className="w-full bg-gradient-to-r from-primary to-[oklch(0.60_0.22_300)] hover:opacity-90 text-white shadow-lg shadow-primary/20 rounded-xl border-0 transition-all duration-300" disabled={loading}>
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Complete Setup
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }

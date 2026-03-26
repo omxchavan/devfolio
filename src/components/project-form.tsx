@@ -273,27 +273,58 @@ export function ProjectForm({ initialData }: ProjectFormProps) {
           <CardTitle className="text-lg">Tags</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex gap-2">
-            <Input
-              placeholder="Add a tag (e.g. react, ml, api)"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  addTag();
-                }
-              }}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={addTag}
-              disabled={form.tags.length >= 10}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Add a tag (e.g. react, ml, api)"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addTag();
+                  }
+                }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={addTag}
+                disabled={form.tags.length >= 10}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Suggested Tags */}
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Suggested Categories</p>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  "react", "nextjs", "typescript", "node", "python",
+                  "machine-learning", "ai", "api", "database", "ui-ux",
+                  "tailwind", "docker", "blockchain", "web3", "mobile",
+                  "flutter", "ios", "android", "cloud", "security"
+                ]
+                  .filter(tag => !form.tags.includes(tag))
+                  .slice(0, 10) // Show top 10 relevant
+                  .map(tag => (
+                    <Badge
+                      key={tag}
+                      variant="outline"
+                      className="cursor-pointer hover:bg-primary/5 hover:border-primary/30 transition-all duration-200 py-1"
+                      onClick={() => {
+                        if (form.tags.length < 10) {
+                          setForm({ ...form, tags: [...form.tags, tag] });
+                        }
+                      }}
+                    >
+                      + {tag}
+                    </Badge>
+                  ))}
+              </div>
+            </div>
           </div>
           {form.tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5">

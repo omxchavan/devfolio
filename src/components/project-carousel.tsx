@@ -64,19 +64,20 @@ export function ProjectCarousel({
     }
   };
 
-  // Cloudinary transform helper
+  // Improved transformation: use pad instead of fill to ensure full visibility
   const transformImage = (url: string) => {
     if (url.includes("cloudinary.com")) {
+      // Use b_auto,c_pad to ensure the entire image is visible without cropping
       return url.replace(
         "/upload/",
-        `/upload/c_fill,g_center,ar_${aspectRatio.includes("video") ? "1.77" : "1.6"},w_1200,q_auto,f_auto/`
+        `/upload/b_auto:border,c_pad,ar_${aspectRatio.includes("video") ? "1.77" : "1.6"},w_1200,q_auto,f_auto/`
       );
     }
     return url;
   };
 
   return (
-    <div className={cn("group relative overflow-hidden", aspectRatio, className)}>
+    <div className={cn("group relative overflow-hidden bg-muted/30", aspectRatio, className)}>
       {/* Scroll Container */}
       <div
         ref={scrollRef}
@@ -86,12 +87,12 @@ export function ProjectCarousel({
         {images.map((img, i) => (
           <div
             key={`${img}-${i}`}
-            className="h-full w-full flex-shrink-0 snap-center select-none"
+            className="h-full w-full flex-shrink-0 snap-center select-none flex items-center justify-center"
           >
             <img
               src={transformImage(img)}
               alt={`${title} - image ${i + 1}`}
-              className="h-full w-full object-cover pointer-events-none"
+              className="h-full w-full object-contain pointer-events-none"
             />
           </div>
         ))}

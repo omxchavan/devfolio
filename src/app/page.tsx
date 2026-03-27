@@ -7,16 +7,26 @@ import User from "@/models/User";
 import { IProject } from "@/types";
 import { ArrowRight, Code2, Rocket, Users, Zap } from "lucide-react";
 
+import { unstable_cache } from "next/cache";
+
+const getCachedFeaturedProjects = unstable_cache(
+  async () => {
+    await connectDB();
+    const projects = await Project.find()
+      .sort({ stars: -1, createdAt: -1 })
+      .limit(6)
+      .populate({ path: "owner", model: User, select: "name image githubUsername" })
+      .lean();
+    
+    // Serialize Mongoose docs
+    return JSON.parse(JSON.stringify(projects)) as IProject[];
+  },
+  ["featured-projects"],
+  { revalidate: 60, tags: ["projects"] }
+);
+
 async function getFeaturedProjects() {
-  await connectDB();
-  const projects = await Project.find()
-    .sort({ stars: -1, createdAt: -1 })
-    .limit(6)
-    .populate({ path: "owner", model: User, select: "name image githubUsername" })
-    .lean();
-  
-  // Serialize Mongoose docs
-  return JSON.parse(JSON.stringify(projects)) as IProject[];
+  return getCachedFeaturedProjects();
 }
 
 export default async function Home() {

@@ -12,7 +12,9 @@ import { Plus, LayoutDashboard, GitPullRequest, FolderGit2, Star } from "lucide-
 import Link from "next/link";
 import { AuthProvider } from "@/components/auth-provider";
 
-async function getUserProjects(userId: string) {
+import { cache } from "react";
+
+const getCachedUserProjects = cache(async (userId: string) => {
   await connectDB();
   const projects = await Project.find({ owner: userId })
     .sort({ createdAt: -1 })
@@ -20,6 +22,10 @@ async function getUserProjects(userId: string) {
     .lean();
   
   return JSON.parse(JSON.stringify(projects)) as IProject[];
+});
+
+async function getUserProjects(userId: string) {
+  return getCachedUserProjects(userId);
 }
 
 export default async function DashboardPage() {

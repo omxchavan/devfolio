@@ -9,47 +9,57 @@ import { IProject } from "@/types";
 import { searchQuerySchema } from "@/lib/validations";
 import { Compass, Sparkles } from "lucide-react";
 
-// Revalidate every 60 seconds for ISR caching
+import { unstable_cache } from "next/cache";
+
+// Revalidate every 60 seconds for global caching
 export const revalidate = 60;
 
 interface ExplorePageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
+const getCachedFilteredProjects = unstable_cache(
+  async (params: Record<string, string | undefined>) => {
+    await connectDB();
+
+    const query = searchQuerySchema.parse(params);
+    const filter: Record<string, unknown> = {};
+
+    if (query.domain) {
+      filter.domain = query.domain;
+    }
+
+    if (query.tags) {
+      const tagList = query.tags.split(",").map((t: string) => t.trim().toLowerCase());
+      filter.tags = { $in: tagList };
+    }
+
+    if (query.q) {
+      filter.$or = [
+        { title: { $regex: query.q, $options: "i" } },
+        { tags: { $elemMatch: { $regex: query.q, $options: "i" } } },
+      ];
+    }
+
+    const sort: Record<string, 1 | -1> =
+      query.sort === "stars"
+        ? { stars: -1, createdAt: -1 }
+        : { createdAt: -1 };
+
+    const projects = await Project.find(filter)
+      .sort(sort)
+      .limit(50)
+      .populate({ path: "owner", model: User, select: "name image githubUsername" })
+      .lean();
+
+    return JSON.parse(JSON.stringify(projects)) as IProject[];
+  },
+  ["explore-projects"],
+  { revalidate: 60, tags: ["projects"] }
+);
+
 async function getFilteredProjects(searchParams: { [key: string]: string | undefined }) {
-  await connectDB();
-
-  const query = searchQuerySchema.parse(searchParams);
-  const filter: Record<string, unknown> = {};
-
-  if (query.domain) {
-    filter.domain = query.domain;
-  }
-
-  if (query.tags) {
-    const tagList = query.tags.split(",").map((t: string) => t.trim().toLowerCase());
-    filter.tags = { $in: tagList };
-  }
-
-  if (query.q) {
-    filter.$or = [
-      { title: { $regex: query.q, $options: "i" } },
-      { tags: { $elemMatch: { $regex: query.q, $options: "i" } } },
-    ];
-  }
-
-  const sort: Record<string, 1 | -1> =
-    query.sort === "stars"
-      ? { stars: -1, createdAt: -1 }
-      : { createdAt: -1 };
-
-  const projects = await Project.find(filter)
-    .sort(sort)
-    .limit(50)
-    .populate({ path: "owner", model: User, select: "name image githubUsername" })
-    .lean();
-
-  return JSON.parse(JSON.stringify(projects)) as IProject[];
+  return getCachedFilteredProjects(searchParams);
 }
 
 function ProjectsLoading() {
@@ -147,11 +157,6 @@ export default async function ExplorePage(props: ExplorePageProps) {
                 <Suspense fallback={<div className="h-12 w-full rounded-xl skeleton-shimmer" />}>
                   <SearchBar />
                 </Suspense>
-              </div>
-
-              {/* Minimal Stats Bar below search */}
-              <div className="flex items-center gap-10">
-
               </div>
             </div>
           </div>

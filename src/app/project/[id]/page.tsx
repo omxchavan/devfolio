@@ -19,18 +19,28 @@ interface ProjectPageProps {
   }>;
 }
 
-async function getProjectData(id: string) {
-  try {
-    await connectDB();
-    const project = await Project.findById(id)
-      .populate({ path: "owner", model: User, select: "name image githubUsername bio socialLinks" })
-      .lean();
+import { unstable_cache } from "next/cache";
 
-    if (!project) return null;
-    return JSON.parse(JSON.stringify(project)) as IProject;
-  } catch {
-    return null;
-  }
+const getCachedProjectData = unstable_cache(
+  async (id: string) => {
+    try {
+      await connectDB();
+      const project = await Project.findById(id)
+        .populate({ path: "owner", model: User, select: "name image githubUsername bio socialLinks" })
+        .lean();
+
+      if (!project) return null;
+      return JSON.parse(JSON.stringify(project)) as IProject;
+    } catch {
+      return null;
+    }
+  },
+  ["project-detail"],
+  { revalidate: 60, tags: ["projects"] }
+);
+
+async function getProjectData(id: string) {
+  return getCachedProjectData(id);
 }
 
 export default async function ProjectPage(props: ProjectPageProps) {

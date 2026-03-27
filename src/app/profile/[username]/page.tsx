@@ -17,20 +17,30 @@ interface ProfilePageProps {
   }>;
 }
 
+import { unstable_cache } from "next/cache";
+
+const getCachedUserProfile = unstable_cache(
+  async (username: string) => {
+    await connectDB();
+    const user = await User.findOne({ githubUsername: username })
+      .populate({
+        path: "projects",
+        model: Project,
+        options: { sort: { createdAt: -1 } },
+        populate: { path: "owner", model: User, select: "name image githubUsername" },
+      })
+      .lean();
+
+    if (!user) return null;
+
+    return JSON.parse(JSON.stringify(user));
+  },
+  ["profile-detail"],
+  { revalidate: 60, tags: ["profiles"] }
+);
+
 async function getUserProfile(username: string) {
-  await connectDB();
-  const user = await User.findOne({ githubUsername: username })
-    .populate({
-      path: "projects",
-      model: Project,
-      options: { sort: { createdAt: -1 } },
-      populate: { path: "owner", model: User, select: "name image githubUsername" },
-    })
-    .lean();
-
-  if (!user) return null;
-
-  return JSON.parse(JSON.stringify(user));
+  return getCachedUserProfile(username);
 }
 
 export default async function ProfilePage(props: ProfilePageProps) {

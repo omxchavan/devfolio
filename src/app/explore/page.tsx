@@ -7,7 +7,7 @@ import Project from "@/models/Project";
 import User from "@/models/User";
 import { IProject } from "@/types";
 import { searchQuerySchema } from "@/lib/validations";
-import { Compass, Sparkles } from "lucide-react";
+import { Compass, Sparkles, LayoutGrid, Search } from "lucide-react";
 import { unstable_cache } from "next/cache";
 
 export const revalidate = 60;
@@ -47,19 +47,15 @@ const getCachedFilteredProjects = unstable_cache(
 
 function ProjectsLoading() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 animate-pulse">
       {[1, 2, 3, 4, 5, 6].map((i) => (
-        <div key={i} className="card-elevated overflow-hidden border-border/20">
-          <div className="h-48 w-full skeleton-shimmer" />
+        <div key={i} className="rounded-2xl border border-border/20 bg-card overflow-hidden">
+          <div className="aspect-video bg-muted/60" />
           <div className="p-5 space-y-4">
-            <div className="h-5 w-3/4 rounded-md skeleton-shimmer" />
+            <div className="h-5 w-3/4 rounded-md bg-muted/60" />
             <div className="space-y-2">
-              <div className="h-3 w-full rounded-md skeleton-shimmer" />
-              <div className="h-3 w-5/6 rounded-md skeleton-shimmer" />
-            </div>
-            <div className="pt-4 border-t border-border/10 flex justify-between">
-              <div className="h-6 w-24 rounded-full skeleton-shimmer" />
-              <div className="h-6 w-12 rounded-full skeleton-shimmer" />
+              <div className="h-3 w-full rounded-md bg-muted/60" />
+              <div className="h-3 w-5/6 rounded-md bg-muted/60" />
             </div>
           </div>
         </div>
@@ -73,13 +69,13 @@ async function ProjectsGrid({ searchParams }: { searchParams: Record<string, str
 
   if (projects.length === 0) {
     return (
-      <div className="card-elevated flex flex-col items-center justify-center py-28 text-center border-dashed border-2 border-border/30 bg-muted/10">
-        <div className="p-5 rounded-2xl bg-muted/40 mb-5">
-          <Compass className="h-10 w-10 text-muted-foreground/30" />
+      <div className="flex flex-col items-center justify-center py-32 text-center rounded-3xl border-2 border-dashed border-border/40 bg-muted/10">
+        <div className="p-6 rounded-3xl bg-background border border-border/50 shadow-xl mb-6">
+          <Compass className="h-12 w-12 text-primary opacity-20" />
         </div>
-        <h3 className="text-xl font-bold mb-2">No projects found</h3>
-        <p className="text-muted-foreground max-w-sm text-sm leading-relaxed">
-          Try adjusting your search terms or filters to find what students are working on.
+        <h3 className="text-2xl font-black tracking-tight mb-2">No projects matching your filters</h3>
+        <p className="text-muted-foreground max-w-sm text-sm font-medium leading-relaxed opacity-60">
+          Try expanding your horizons by clearing some filters or searching for something broader.
         </p>
       </div>
     );
@@ -102,27 +98,28 @@ export default async function ExplorePage(props: ExplorePageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-muted/5">
-      {/* Header */}
-      <div className="border-b border-border/40 bg-card/60 backdrop-blur-md sticky top-16 z-40">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 max-w-6xl mx-auto">
-            {/* Left */}
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-widest">
-                <Sparkles className="h-3 w-3" />
-                Student Showcase
+    <div className="min-h-screen bg-background selection:bg-primary/10">
+      {/* Top Page Header (Non-sticky to avoid clashing with navbar) */}
+      <div className="bg-muted/30 border-b border-border/10 py-16 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 max-w-7xl mx-auto">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-[10px] font-black uppercase tracking-[0.2em]">
+                <LayoutGrid className="h-3 w-3" />
+                Engineering Commons
               </div>
-              <h1 className="text-3xl font-extrabold tracking-tight">
-                Project Gallery
+              <h1 className="text-5xl font-black tracking-tighter leading-none">
+                Innovation <span className="text-primary italic">Gallery</span>
               </h1>
-              <p className="text-muted-foreground text-sm font-medium">
-                Browsing excellence from AISSMS IOIT IT students.
+              <p className="text-muted-foreground text-base max-w-md font-medium leading-relaxed opacity-70">
+                Peer-reviewed engineering projects from the AISSMS IOIT IT department.
               </p>
             </div>
-            {/* Right — Search */}
+            
             <div className="w-full md:max-w-sm">
-              <Suspense fallback={<div className="h-11 w-full rounded-xl skeleton-shimmer" />}>
+              <Suspense fallback={<div className="h-14 w-full rounded-2xl bg-muted/60 animate-pulse" />}>
                 <SearchBar />
               </Suspense>
             </div>
@@ -130,20 +127,34 @@ export default async function ExplorePage(props: ExplorePageProps) {
         </div>
       </div>
 
-      {/* Main */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-12 items-start max-w-6xl mx-auto">
-          {/* Sidebar */}
-          <aside className="lg:sticky lg:top-[164px] hidden lg:block">
-            <Suspense fallback={<div className="h-[400px] w-full skeleton-shimmer rounded-2xl" />}>
-              <div className="space-y-6">
-                <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Filter Excellence</h3>
+      {/* Main Layout Grid */}
+      <div className="container mx-auto px-4 py-20">
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-16 items-start max-w-7xl mx-auto">
+          
+          {/* Static/Sticky Sidebar */}
+          <aside className="hidden lg:block sticky top-24 self-start">
+            <Suspense fallback={<div className="h-[500px] w-full bg-muted/60 rounded-3xl animate-pulse" />}>
+              <div className="space-y-8 p-1">
+                <div className="flex items-center gap-3 px-1 mb-2">
+                  <div className="h-1 w-8 bg-primary rounded-full" />
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-muted-foreground/60">Refine Search</h3>
+                </div>
                 <FilterSidebar />
+                
+                <div className="rounded-2xl bg-primary/5 border border-primary/10 p-5 mt-10">
+                  <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1.5 flex items-center gap-2">
+                    <Sparkles className="h-3 w-3" />
+                    Pro Tip
+                  </p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">
+                    Combine domain filters and specific technology tags for precise results.
+                  </p>
+                </div>
               </div>
             </Suspense>
           </aside>
 
-          {/* Grid */}
+          {/* Main Results Area */}
           <main className="min-h-[600px]">
             <Suspense fallback={<ProjectsLoading />}>
               <ProjectsGrid searchParams={safeParams} />

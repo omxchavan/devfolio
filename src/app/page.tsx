@@ -27,17 +27,17 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col pb-20">
-      {/* Hero Section */}
-      <section className="pt-24 pb-20 lg:pt-32 lg:pb-32 relative overflow-hidden">
-        {/* Subtle background decoration */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none opacity-[0.03]">
-          <div className="absolute top-20 left-10 w-64 h-64 rounded-full bg-primary blur-[120px]" />
-          <div className="absolute bottom-20 right-10 w-64 h-64 rounded-full bg-blue-600 blur-[120px]" />
+      {/* Hero Section (Clean, non-glass) */}
+      <section className="pt-24 pb-20 lg:pt-32 lg:pb-32 relative overflow-hidden bg-muted/20">
+        {/* Subtle non-glass decoration */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none opacity-[0.05]">
+          <div className="absolute top-20 left-10 w-96 h-96 rounded-full bg-primary/20 blur-[150px]" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full bg-blue-600/10 blur-[150px]" />
         </div>
 
         <div className="container mx-auto px-4">
           <div className="flex flex-col items-center text-center space-y-8 max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-semibold text-primary backdrop-blur-sm">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-semibold text-primary">
               <GraduationCap className="h-3.5 w-3.5" />
               AISSMS IOIT • IT Department
             </div>
@@ -63,7 +63,7 @@ export default async function Home() {
               </Link>
               <Link
                 href="/explore"
-                className={buttonVariants({ size: "lg", variant: "outline", className: "w-full sm:w-auto h-12 rounded-xl px-8 border-border/50 hover:bg-accent/50 font-semibold" })}
+                className={buttonVariants({ size: "lg", variant: "outline", className: "w-full sm:w-auto h-12 rounded-xl px-8 border-border bg-background hover:bg-muted font-semibold" })}
               >
                 Explore Gallery
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -89,7 +89,7 @@ export default async function Home() {
       </section>
 
       {/* Stats/Department Focus */}
-      <section className="container mx-auto px-4 pb-28">
+      <section className="container mx-auto px-4 pb-28 pt-10">
         <div className="grid md:grid-cols-3 gap-6">
           {[
             {
@@ -116,7 +116,7 @@ export default async function Home() {
           ].map((feature) => (
             <div
               key={feature.title}
-              className="group card-elevated p-8 space-y-4 hover:shadow-xl transition-all duration-300"
+              className="group card-elevated p-8 space-y-4 shadow-sm"
             >
               <div className={`w-fit p-3 rounded-xl ${feature.bg} ${feature.color}`}>
                 <feature.icon className="h-5 w-5" />
@@ -134,14 +134,14 @@ export default async function Home() {
 
       {/* Featured Projects Showcase */}
       <section className="container mx-auto px-4 space-y-10">
-        <div className="flex items-end justify-between border-b border-border/50 pb-6">
+        <div className="flex items-end justify-between border-b border-border pb-6">
           <div className="space-y-1">
             <h2 className="text-3xl font-bold tracking-tight">Project Gallery</h2>
             <p className="text-muted-foreground">Highlighting the best work from IOIT IT students.</p>
           </div>
           <Link
             href="/explore"
-            className={buttonVariants({ variant: "ghost", className: "hidden sm:flex gap-2 text-sm font-semibold hover:bg-primary/5 hover:text-primary transition-all" })}
+            className={buttonVariants({ variant: "ghost", className: "hidden sm:flex gap-2 text-sm font-semibold hover:bg-muted" })}
           >
             Visit Showcase
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -155,24 +155,15 @@ export default async function Home() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-24 rounded-2xl border border-dashed border-border bg-muted/20">
+          <div className="text-center py-24 rounded-2xl border border-dashed border-border bg-muted/10">
             <p className="text-muted-foreground font-medium italic">The gallery is currently being curated. Submit your project to be featured!</p>
           </div>
         )}
-
-        <div className="sm:hidden flex justify-center pt-4">
-          <Link
-            href="/explore"
-            className={buttonVariants({ size: "lg", variant: "outline", className: "w-full rounded-xl" })}
-          >
-            Explore all student work
-          </Link>
-        </div>
       </section>
 
       {/* Department Banner */}
       <section className="container mx-auto px-4 pt-32 pb-10">
-        <div className="rounded-3xl border border-border bg-card p-10 md:p-16 flex flex-col md:flex-row items-center justify-between gap-10 overflow-hidden relative">
+        <div className="rounded-3xl border border-border bg-card p-10 md:p-16 flex flex-col md:flex-row items-center justify-between gap-10 overflow-hidden relative shadow-sm">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
           
           <div className="space-y-4 text-center md:text-left relative z-10 max-w-xl">

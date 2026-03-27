@@ -64,10 +64,8 @@ export function ProjectCarousel({
     }
   };
 
-  // Improved transformation: use pad instead of fill to ensure full visibility
   const transformImage = (url: string) => {
     if (url.includes("cloudinary.com")) {
-      // Use b_auto,c_pad to ensure the entire image is visible without cropping
       return url.replace(
         "/upload/",
         `/upload/b_auto:border,c_pad,ar_${aspectRatio.includes("video") ? "1.77" : "1.6"},w_1200,q_auto,f_auto/`
@@ -77,7 +75,7 @@ export function ProjectCarousel({
   };
 
   return (
-    <div className={cn("group relative overflow-hidden bg-muted/30", aspectRatio, className)}>
+    <div className={cn("group relative overflow-hidden bg-muted", aspectRatio, className)}>
       {/* Scroll Container */}
       <div
         ref={scrollRef}
@@ -98,27 +96,27 @@ export function ProjectCarousel({
         ))}
       </div>
 
-      {/* Navigation Arrows */}
+      {/* Navigation Arrows (Solid Background) */}
       {showArrows && images.length > 1 && (
         <>
           <button
             onClick={handlePrev}
-            className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center h-8 w-8 rounded-full bg-background/80 text-foreground opacity-0 transition-opacity group-hover:opacity-100 backdrop-blur-sm border border-border/50 hover:bg-background shadow-lg z-10"
+            className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center h-8 w-8 rounded-full bg-background text-foreground opacity-0 transition-opacity group-hover:opacity-100 border border-border hover:bg-muted shadow-md z-10"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
             onClick={handleNext}
-            className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center h-8 w-8 rounded-full bg-background/80 text-foreground opacity-0 transition-opacity group-hover:opacity-100 backdrop-blur-sm border border-border/50 hover:bg-background shadow-lg z-10"
+            className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center h-8 w-8 rounded-full bg-background text-foreground opacity-0 transition-opacity group-hover:opacity-100 border border-border hover:bg-muted shadow-md z-10"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
         </>
       )}
 
-      {/* Indicators */}
+      {/* Indicators (Solid Background) */}
       {images.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 px-2 py-1.5 rounded-full bg-black/20 backdrop-blur-md">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 px-2.5 py-1.5 rounded-full bg-black/80">
           {images.map((_, i) => (
             <button
               key={i}
@@ -131,7 +129,7 @@ export function ProjectCarousel({
                 "h-1.5 transition-all duration-300 rounded-full",
                 currentIndex === i 
                   ? "w-4 bg-white" 
-                  : "w-1.5 bg-white/40 hover:bg-white/60"
+                  : "w-1.5 bg-white/30 hover:bg-white/50"
               )}
             />
           ))}

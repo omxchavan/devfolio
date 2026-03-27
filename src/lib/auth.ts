@@ -63,6 +63,7 @@ export const authOptions: NextAuthOptions = {
           token.id = user._id.toString();
           token.githubUsername = profile.login;
           token.onboarded = user.onboarded;
+          token.role = user.role || "user";
         }
       }
       return token;
@@ -77,6 +78,9 @@ export const authOptions: NextAuthOptions = {
       }
       if (token.onboarded !== undefined) {
         session.user.onboarded = token.onboarded as boolean;
+      }
+      if (token.role) {
+        session.user.role = token.role as string;
       }
       return session;
     },

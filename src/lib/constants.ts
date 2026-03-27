@@ -12,3 +12,7 @@ export const DOMAINS = [
 ] as const;
 
 export type Domain = (typeof DOMAINS)[number];
+
+export const ACADEMIC_YEARS = ["FY", "SY", "TY", "BE"] as const;
+
+export type AcademicYear = (typeof ACADEMIC_YEARS)[number];

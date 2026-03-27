@@ -8,9 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { updateProfileSchema } from "@/lib/validations";
-import { Loader2, Link as LinkIcon, User } from "lucide-react";
+import { Loader2, Link as LinkIcon, User, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 import { IUser } from "@/types";
+import { ACADEMIC_YEARS } from "@/lib/constants";
 
 interface ProfileFormProps {
   initialData: IUser;
@@ -22,6 +23,8 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
 
   const [form, setForm] = useState({
     bio: initialData?.bio || "",
+    prn: (initialData as any)?.prn || "",
+    year: (initialData as any)?.year || "",
     socialLinks: {
       linkedin: initialData?.socialLinks?.linkedin || "",
       twitter: initialData?.socialLinks?.twitter || "",
@@ -77,7 +80,7 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
             Basic Info
           </CardTitle>
           <CardDescription>
-            This information will be displayed publicly so be careful what you share.
+            This information will be displayed publicly.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -95,6 +98,47 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
             <p className="text-xs text-muted-foreground ml-auto max-w-[500px] flex justify-end">
               {form.bio.length}/500
             </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <GraduationCap className="h-5 w-5" />
+            College Details
+          </CardTitle>
+          <CardDescription>Your PRN and academic year for AISSMS IOIT.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="prn">PRN (Roll Number)</Label>
+              <Input
+                id="prn"
+                placeholder="e.g. 72312345"
+                value={form.prn}
+                onChange={(e) => setForm({ ...form, prn: e.target.value })}
+                className={errors.prn ? "border-destructive" : ""}
+              />
+              {errors.prn && <p className="text-xs text-destructive">{errors.prn}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="year">Academic Year</Label>
+              <select
+                id="year"
+                value={form.year}
+                onChange={(e) => setForm({ ...form, year: e.target.value })}
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-ring"
+              >
+                <option value="">Select year</option>
+                {ACADEMIC_YEARS.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+              {errors.year && <p className="text-xs text-destructive">{errors.year}</p>}
+            </div>
           </div>
         </CardContent>
       </Card>

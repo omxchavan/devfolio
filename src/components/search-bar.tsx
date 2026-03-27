@@ -13,7 +13,6 @@ export function SearchBar() {
     (value: string) => {
       const currentQ = searchParams.get("q") || "";
       if (value === currentQ) return;
-      
       const params = new URLSearchParams(searchParams.toString());
       if (value.trim()) {
         params.set("q", value.trim());
@@ -27,22 +26,19 @@ export function SearchBar() {
   );
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      updateSearch(query);
-    }, 400);
-
+    const timer = setTimeout(() => updateSearch(query), 400);
     return () => clearTimeout(timer);
   }, [query, updateSearch]);
 
   return (
-    <div className="relative group">
-      <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors duration-200" />
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <input
         type="text"
         placeholder="Search projects by title or tag..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="neo-input w-full pl-10 pr-4 h-12 rounded-xl text-sm font-medium placeholder:text-muted-foreground/50 outline-none transition-all duration-200"
+        className="w-full pl-9 pr-4 h-11 rounded-lg border border-border bg-background text-sm placeholder:text-muted-foreground/60 outline-none focus:ring-2 focus:ring-ring/20 focus:border-ring transition-all"
       />
     </div>
   );

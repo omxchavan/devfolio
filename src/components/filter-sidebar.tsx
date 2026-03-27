@@ -1,33 +1,18 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { DOMAINS } from "@/lib/constants";
 import { SlidersHorizontal, X, ArrowDownWideNarrow } from "lucide-react";
 
 const POPULAR_TAGS = [
-  "react",
-  "nextjs",
-  "python",
-  "machine-learning",
-  "typescript",
-  "node",
-  "flutter",
-  "docker",
-  "api",
-  "database",
-  "blockchain",
-  "ios",
-  "android",
-  "rust",
-  "go",
+  "react", "nextjs", "python", "machine-learning", "typescript",
+  "node", "flutter", "docker", "api", "database",
+  "blockchain", "ios", "android", "rust", "go",
 ];
 
 export function FilterSidebar() {
   const router = useRouter();
   const searchParams = useSearchParams();
-
   const currentDomain = searchParams.get("domain") || "";
   const currentTags = searchParams.get("tags")?.split(",").filter(Boolean) || [];
   const currentSort = searchParams.get("sort") || "latest";
@@ -45,11 +30,8 @@ export function FilterSidebar() {
 
   function toggleTag(tag: string) {
     const tags = new Set(currentTags);
-    if (tags.has(tag)) {
-      tags.delete(tag);
-    } else {
-      tags.add(tag);
-    }
+    if (tags.has(tag)) tags.delete(tag);
+    else tags.add(tag);
     updateParams("tags", Array.from(tags).join(","));
   }
 
@@ -60,12 +42,12 @@ export function FilterSidebar() {
   const hasFilters = currentDomain || currentTags.length > 0 || currentSort !== "latest";
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4 text-primary" />
-          <h3 className="font-bold text-sm">Filters</h3>
+          <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
+          <h3 className="font-semibold text-sm">Filters</h3>
         </div>
         {hasFilters && (
           <button
@@ -78,11 +60,9 @@ export function FilterSidebar() {
         )}
       </div>
 
-      <div className="h-0.5 bg-foreground/5 dark:bg-border/30 rounded-full" />
-
       {/* Sort */}
       <div className="space-y-2.5">
-        <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+        <h4 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
           <ArrowDownWideNarrow className="h-3 w-3" />
           Sort
         </h4>
@@ -93,10 +73,10 @@ export function FilterSidebar() {
           ].map((sort) => (
             <button
               key={sort.value}
-              className={`neo-badge rounded-lg px-3 py-1.5 text-xs cursor-pointer transition-all duration-200 ${
+              className={`rounded-md px-3 py-1.5 text-xs font-medium border transition-colors ${
                 currentSort === sort.value
-                  ? "!bg-foreground !text-background !border-foreground dark:!bg-primary dark:!text-primary-foreground dark:!border-primary"
-                  : "hover:border-primary/50"
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-background text-muted-foreground border-border hover:border-foreground/30"
               }`}
               onClick={() => updateParams("sort", sort.value)}
             >
@@ -106,21 +86,21 @@ export function FilterSidebar() {
         </div>
       </div>
 
-      <div className="h-0.5 bg-foreground/5 dark:bg-border/30 rounded-full" />
+      <div className="h-px bg-border" />
 
       {/* Domain */}
       <div className="space-y-2.5">
-        <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+        <h4 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
           Domain
         </h4>
         <div className="flex flex-wrap gap-1.5">
           {DOMAINS.map((domain) => (
             <button
               key={domain}
-              className={`neo-badge rounded-lg px-2 py-1 text-[11px] cursor-pointer transition-all duration-200 ${
+              className={`rounded-md px-2 py-1 text-[11px] font-medium border transition-colors ${
                 currentDomain === domain
-                  ? "!bg-foreground !text-background !border-foreground dark:!bg-primary dark:!text-primary-foreground dark:!border-primary"
-                  : "hover:border-primary/50"
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-background text-muted-foreground border-border hover:border-foreground/30"
               }`}
               onClick={() =>
                 updateParams("domain", currentDomain === domain ? "" : domain)
@@ -132,21 +112,21 @@ export function FilterSidebar() {
         </div>
       </div>
 
-      <div className="h-0.5 bg-foreground/5 dark:bg-border/30 rounded-full" />
+      <div className="h-px bg-border" />
 
       {/* Tags */}
       <div className="space-y-2.5">
-        <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+        <h4 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
           Tags
         </h4>
         <div className="flex flex-wrap gap-1.5">
           {POPULAR_TAGS.map((tag) => (
             <button
               key={tag}
-              className={`neo-badge rounded-lg px-2 py-1 text-[11px] cursor-pointer transition-all duration-200 ${
+              className={`rounded-md px-2 py-1 text-[11px] font-medium border transition-colors ${
                 currentTags.includes(tag)
-                  ? "!bg-foreground !text-background !border-foreground dark:!bg-primary dark:!text-primary-foreground dark:!border-primary"
-                  : "hover:border-primary/50"
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-background text-muted-foreground border-border hover:border-foreground/30"
               }`}
               onClick={() => toggleTag(tag)}
             >

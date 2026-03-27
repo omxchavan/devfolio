@@ -6,6 +6,7 @@ declare module "next-auth" {
       id: string;
       githubUsername: string;
       onboarded?: boolean;
+      role?: string;
     } & DefaultSession["user"];
   }
 
@@ -19,5 +20,6 @@ declare module "next-auth/jwt" {
     id?: string;
     githubUsername?: string;
     onboarded?: boolean;
+    role?: string;
   }
 }

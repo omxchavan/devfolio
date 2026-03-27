@@ -1,11 +1,12 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 import { IUser as IUserBase } from "@/types";
+import { ACADEMIC_YEARS } from "@/lib/constants";
 
 export interface IUser extends IUserBase, Document {
   _id: any;
   projects: mongoose.Types.ObjectId[];
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: any;
+  updatedAt: any;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -16,6 +17,9 @@ const UserSchema = new Schema<IUser>(
     githubUsername: { type: String, required: true, unique: true, index: true },
     onboarded: { type: Boolean, default: false },
     bio: { type: String, default: "", maxlength: 500 },
+    prn: { type: String, default: "", index: true },
+    year: { type: String, enum: [...ACADEMIC_YEARS, ""], default: "" },
+    role: { type: String, enum: ["user", "admin"], default: "user" },
     socialLinks: {
       github: { type: String, default: "" },
       linkedin: { type: String, default: "" },

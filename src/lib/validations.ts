@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DOMAINS } from "@/lib/constants";
+import { DOMAINS, ACADEMIC_YEARS } from "@/lib/constants";
 
 const urlSchema = z.string().url().or(z.literal("")).optional();
 
@@ -41,6 +41,15 @@ export const updateProfileSchema = z.object({
     .max(500, "Bio must be under 500 characters")
     .trim()
     .optional(),
+  prn: z
+    .string()
+    .max(20, "PRN must be under 20 characters")
+    .trim()
+    .optional(),
+  year: z
+    .enum(ACADEMIC_YEARS)
+    .or(z.literal(""))
+    .optional(),
   socialLinks: z
     .object({
       linkedin: urlSchema,
@@ -54,6 +63,15 @@ export const onboardingSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(50).trim(),
   email: z.string().email("Must be a valid email").trim(),
   bio: z.string().max(500, "Bio must be under 500 characters").trim().optional(),
+  prn: z
+    .string()
+    .max(20, "PRN must be under 20 characters")
+    .trim()
+    .optional(),
+  year: z
+    .enum(ACADEMIC_YEARS)
+    .or(z.literal(""))
+    .optional(),
   socialLinks: z
     .object({
       linkedin: urlSchema,

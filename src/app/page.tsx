@@ -5,8 +5,7 @@ import { connectDB } from "@/lib/db";
 import Project from "@/models/Project";
 import User from "@/models/User";
 import { IProject } from "@/types";
-import { ArrowRight, Code2, Rocket, Users, Zap } from "lucide-react";
-
+import { ArrowRight, Code2, GraduationCap, Rocket, Users, Zap } from "lucide-react";
 import { unstable_cache } from "next/cache";
 
 const getCachedFeaturedProjects = unstable_cache(
@@ -15,159 +14,182 @@ const getCachedFeaturedProjects = unstable_cache(
     const projects = await Project.find()
       .sort({ stars: -1, createdAt: -1 })
       .limit(6)
-      .populate({ path: "owner", model: User, select: "name image githubUsername" })
+      .populate({ path: "owner", model: User, select: "name image githubUsername prn year" })
       .lean();
-    
-    // Serialize Mongoose docs
     return JSON.parse(JSON.stringify(projects)) as IProject[];
   },
   ["featured-projects"],
   { revalidate: 60, tags: ["projects"] }
 );
 
-async function getFeaturedProjects() {
-  return getCachedFeaturedProjects();
-}
-
 export default async function Home() {
-  const featuredProjects = await getFeaturedProjects();
+  const featuredProjects = await getCachedFeaturedProjects();
 
   return (
-    <div className="flex flex-col gap-0 pb-16">
+    <div className="flex flex-col pb-20">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-background pt-28 pb-36">
-        {/* Dot grid pattern */}
-        <div className="absolute inset-0 bg-dot-grid" />
-        
-        {/* Gradient orbs */}
-        <div className="gradient-orb w-[500px] h-[500px] bg-primary/40 -top-40 -left-20" />
-        <div className="gradient-orb w-[400px] h-[400px] bg-[oklch(0.60_0.22_300_/_40%)] -top-20 right-0" />
-        <div className="gradient-orb w-[300px] h-[300px] bg-[oklch(0.70_0.18_200_/_30%)] bottom-0 left-1/3" />
-        
-        {/* Fade overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/80 to-transparent h-20" />
-        
-        <div className="container mx-auto px-4 relative z-10">
+      <section className="pt-24 pb-20 lg:pt-32 lg:pb-32 relative overflow-hidden">
+        {/* Subtle background decoration */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none opacity-[0.03]">
+          <div className="absolute top-20 left-10 w-64 h-64 rounded-full bg-primary blur-[120px]" />
+          <div className="absolute bottom-20 right-10 w-64 h-64 rounded-full bg-blue-600 blur-[120px]" />
+        </div>
+
+        <div className="container mx-auto px-4">
           <div className="flex flex-col items-center text-center space-y-8 max-w-3xl mx-auto">
-            <div className="animate-fade-up inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary backdrop-blur-sm">
-              <span className="flex h-2 w-2 rounded-full bg-primary mr-2 animate-pulse" />
-              The platform for student builders
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-semibold text-primary backdrop-blur-sm">
+              <GraduationCap className="h-3.5 w-3.5" />
+              AISSMS IOIT • IT Department
             </div>
-            
-            <h1 className="animate-fade-up delay-1 text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1]">
-              Showcase your work to the{" "}
-              <span className="gradient-text-animated">world</span>
-            </h1>
-            
-            <p className="animate-fade-up delay-2 text-lg md:text-xl text-muted-foreground max-w-2xl leading-relaxed">
-              Devfolio automatically syncs with GitHub to display your projects,
-              find your contributors, and build your developer portfolio in seconds.
-            </p>
-            
-            <div className="animate-fade-up delay-3 flex flex-col sm:flex-row items-center gap-4 pt-4">
+
+            <div className="space-y-4">
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]">
+                The Student <br />
+                <span className="text-primary italic">Innovation</span> Showcase
+              </h1>
+              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                The official platform for IT students to showcase engineering excellence, 
+                track academic projects, and build industry-ready portfolios.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
               <Link
                 href="/create-project"
-                className={buttonVariants({ size: "lg", className: "w-full sm:w-auto gap-2 bg-gradient-to-r from-primary to-[oklch(0.60_0.22_300)] hover:opacity-90 text-white shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all duration-300 rounded-full px-8 border-0" })}
+                className={buttonVariants({ size: "lg", className: "w-full sm:w-auto h-12 rounded-xl px-8 shadow-lg shadow-primary/20 font-semibold" })}
               >
-                <Rocket className="h-4 w-4" />
-                Add Your Project
+                <Rocket className="mr-2 h-4 w-4" />
+                Submit Your Project
               </Link>
               <Link
                 href="/explore"
-                className={buttonVariants({ size: "lg", variant: "outline", className: "w-full sm:w-auto gap-2 rounded-full px-8 border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-all duration-300" })}
+                className={buttonVariants({ size: "lg", variant: "outline", className: "w-full sm:w-auto h-12 rounded-xl px-8 border-border/50 hover:bg-accent/50 font-semibold" })}
               >
-                Explore Projects
-                <ArrowRight className="h-4 w-4" />
+                Explore Gallery
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
+            </div>
+
+            <div className="pt-10 flex flex-wrap justify-center gap-x-8 gap-y-4 text-sm text-muted-foreground/60 font-medium">
+              <div className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                FY to BE Progress
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                PRN-Verified Profiles
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-violet-500" />
+                GitHub Contribution Sync
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section className="container mx-auto px-4 -mt-16 relative z-20">
+      {/* Stats/Department Focus */}
+      <section className="container mx-auto px-4 pb-28">
         <div className="grid md:grid-cols-3 gap-6">
           {[
             {
               icon: Code2,
-              title: "GitHub Sync",
-              description: "We automatically fetch your repository details, tech stack, and README data.",
-              color: "from-blue-500/15 to-blue-500/5",
-              iconColor: "text-blue-500",
-              delay: "delay-1",
+              title: "Engineering Portfolio",
+              description: "Every project is automatically linked to your GitHub repo, pulling README data and tech stacks instantly.",
+              color: "text-blue-600 dark:text-blue-400",
+              bg: "bg-blue-50 dark:bg-blue-500/10",
             },
             {
               icon: Users,
-              title: "Auto-Contributors",
-              description: "Contributors are automatically detected and linked to their devfolio profiles.",
-              color: "from-violet-500/15 to-violet-500/5",
-              iconColor: "text-violet-500",
-              delay: "delay-2",
+              title: "Peer Collaboration",
+              description: "Automatically detect and link contributors. Build together and get recognized together on the department wall.",
+              color: "text-violet-600 dark:text-violet-400",
+              bg: "bg-violet-50 dark:bg-violet-500/10",
             },
             {
               icon: Zap,
-              title: "Beautiful Portfolios",
-              description: "Get a stunning, shareable developer portfolio page right out of the box.",
-              color: "from-emerald-500/15 to-emerald-500/5",
-              iconColor: "text-emerald-500",
-              delay: "delay-3",
+              title: "Industry Ready",
+              description: "A professional, clean, and impressive display of your 4-year journey from FY fundamentals to BE capstone projects.",
+              color: "text-emerald-600 dark:text-emerald-400",
+              bg: "bg-emerald-50 dark:bg-emerald-500/10",
             },
           ].map((feature) => (
             <div
               key={feature.title}
-              className={`animate-fade-up animate-stagger-child ${feature.delay} neo-card group flex flex-col items-center text-center p-8 space-y-4 rounded-xl`}
+              className="group card-elevated p-8 space-y-4 hover:shadow-xl transition-all duration-300"
             >
-              <div className={`p-3 rounded-xl bg-gradient-to-br ${feature.color} ${feature.iconColor} transition-transform duration-300 group-hover:scale-110`}>
-                <feature.icon className="h-6 w-6" />
+              <div className={`w-fit p-3 rounded-xl ${feature.bg} ${feature.color}`}>
+                <feature.icon className="h-5 w-5" />
               </div>
-              <h3 className="text-xl font-semibold">{feature.title}</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                {feature.description}
-              </p>
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold group-hover:text-primary transition-colors">{feature.title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Featured Projects */}
-      <section className="container mx-auto px-4 space-y-8 mt-24">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1.5">
-            <h2 className="text-3xl font-bold tracking-tight">Featured Projects</h2>
-            <p className="text-muted-foreground">Top rated projects from the community.</p>
+      {/* Featured Projects Showcase */}
+      <section className="container mx-auto px-4 space-y-10">
+        <div className="flex items-end justify-between border-b border-border/50 pb-6">
+          <div className="space-y-1">
+            <h2 className="text-3xl font-bold tracking-tight">Project Gallery</h2>
+            <p className="text-muted-foreground">Highlighting the best work from IOIT IT students.</p>
           </div>
           <Link
             href="/explore"
-            className={buttonVariants({ variant: "ghost", className: "hidden sm:flex gap-1 text-muted-foreground hover:text-primary transition-colors" })}
+            className={buttonVariants({ variant: "ghost", className: "hidden sm:flex gap-2 text-sm font-semibold hover:bg-primary/5 hover:text-primary transition-all" })}
           >
-            View all
-            <ArrowRight className="h-4 w-4" />
+            Visit Showcase
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
 
         {featuredProjects.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredProjects.map((project, i) => (
-              <div key={project._id.toString()} className={`animate-fade-up animate-stagger-child delay-${Math.min(i + 1, 6)}`}>
-                <ProjectCard project={project as any} />
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {featuredProjects.map((project) => (
+              <ProjectCard key={project._id.toString()} project={project as any} />
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 rounded-2xl border border-dashed border-border/50 bg-card/30 backdrop-blur-sm">
-            <p className="text-muted-foreground">No projects found. Be the first to add one!</p>
+          <div className="text-center py-24 rounded-2xl border border-dashed border-border bg-muted/20">
+            <p className="text-muted-foreground font-medium italic">The gallery is currently being curated. Submit your project to be featured!</p>
           </div>
         )}
-        
+
         <div className="sm:hidden flex justify-center pt-4">
           <Link
             href="/explore"
-            className={buttonVariants({ variant: "ghost", className: "gap-1 text-muted-foreground hover:text-primary" })}
+            className={buttonVariants({ size: "lg", variant: "outline", className: "w-full rounded-xl" })}
           >
-            View all projects
-            <ArrowRight className="h-4 w-4" />
+            Explore all student work
           </Link>
+        </div>
+      </section>
+
+      {/* Department Banner */}
+      <section className="container mx-auto px-4 pt-32 pb-10">
+        <div className="rounded-3xl border border-border bg-card p-10 md:p-16 flex flex-col md:flex-row items-center justify-between gap-10 overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
+          
+          <div className="space-y-4 text-center md:text-left relative z-10 max-w-xl">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Ready to showcase your innovation?</h2>
+            <p className="text-muted-foreground md:text-lg">
+              Join your fellow student builders and start building your legacy at AISSMS IOIT.
+            </p>
+          </div>
+          
+          <div className="relative z-10 shrink-0">
+            <Link
+              href="/create-project"
+              className={buttonVariants({ size: "lg", className: "h-14 px-10 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95" })}
+            >
+              Get Started
+            </Link>
+          </div>
         </div>
       </section>
     </div>

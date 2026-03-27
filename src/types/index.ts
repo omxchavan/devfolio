@@ -33,6 +33,9 @@ export interface IUser {
   githubUsername: string;
   onboarded: boolean;
   bio?: string;
+  prn?: string;
+  year?: string;
+  role?: "user" | "admin";
   socialLinks?: {
     github?: string;
     linkedin?: string;
@@ -40,4 +43,6 @@ export interface IUser {
     portfolio?: string;
   };
   projects: any[]; // IDs or IProjects
+  createdAt?: string;
+  updatedAt?: string;
 }

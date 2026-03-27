@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DOMAINS } from "@/lib/constants";
 import { createProjectSchema, updateProjectSchema } from "@/lib/validations";
-import { Loader2, Plus, X, Upload, Link as LinkIcon, GitPullRequest } from "lucide-react";
+import { Loader2, Plus, X, Upload, Link as LinkIcon, GitPullRequest, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { IProject } from "@/types";
 
@@ -55,41 +55,54 @@ export function ProjectForm({ initialData }: ProjectFormProps) {
     setForm({ ...form, tags: form.tags.filter((t) => t !== tag) });
   }
 
-  async function uploadImage(file: File) {
+  async function uploadImages(files: FileList) {
+    const remainingSlots = 5 - form.images.length;
+    if (remainingSlots <= 0) return;
+
+    const filesToUpload = Array.from(files).slice(0, remainingSlots);
+    if (filesToUpload.length === 0) return;
+
     setImageUploading(true);
+    const loadingToast = toast.loading(`Uploading ${filesToUpload.length} image(s)...`);
+
     try {
       // Get signed upload params
       const paramRes = await fetch("/api/upload", { method: "POST" });
       if (!paramRes.ok) throw new Error("Failed to get upload params");
       const params = await paramRes.json();
 
-      // Upload to Cloudinary
-      const formData = new FormData();
-      
-      // Append all signed params from the server
-      Object.entries(params).forEach(([key, value]) => {
-        if (key !== "cloudName" && key !== "apiKey") {
-          formData.append(key, value as string);
-        }
+      const uploadPromises = filesToUpload.map(async (file) => {
+        if (file.size > 5 * 1024 * 1024) throw new Error(`File ${file.name} too large (max 5MB)`);
+
+        const formData = new FormData();
+        Object.entries(params).forEach(([key, value]) => {
+          if (key !== "cloudName" && key !== "apiKey") {
+            formData.append(key, value as string);
+          }
+        });
+        formData.append("api_key", params.apiKey);
+        formData.append("file", file);
+
+        const uploadRes = await fetch(
+          `https://api.cloudinary.com/v1_1/${params.cloudName}/image/upload`,
+          { method: "POST", body: formData }
+        );
+
+        if (!uploadRes.ok) throw new Error("Upload failed");
+        const data = await uploadRes.json();
+        return data.secure_url;
       });
-      formData.append("api_key", params.apiKey);
-      formData.append("file", file);
 
-      const uploadRes = await fetch(
-        `https://api.cloudinary.com/v1_1/${params.cloudName}/image/upload`,
-        { method: "POST", body: formData }
-      );
-
-      if (!uploadRes.ok) throw new Error("Upload failed");
-
-      const data = await uploadRes.json();
+      const urls = await Promise.all(uploadPromises);
       setForm((prev) => ({
         ...prev,
-        images: [...prev.images, data.secure_url],
+        images: [...prev.images, ...urls],
       }));
-      toast.success("Image uploaded!");
-    } catch {
-      toast.error("Failed to upload image");
+      toast.dismiss(loadingToast);
+      toast.success("Images uploaded successfully!");
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error(error instanceof Error ? error.message : "Failed to upload images");
     } finally {
       setImageUploading(false);
     }
@@ -103,7 +116,6 @@ export function ProjectForm({ initialData }: ProjectFormProps) {
     e.preventDefault();
     setErrors({});
 
-    // Validate
     const schema = initialData ? updateProjectSchema : createProjectSchema;
     const result = schema.safeParse(form);
     if (!result.success) {
@@ -137,11 +149,9 @@ export function ProjectForm({ initialData }: ProjectFormProps) {
       } else {
         router.push("/dashboard");
       }
-      router.refresh();
+      setTimeout(() => router.refresh(), 500);
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Something went wrong"
-      );
+      toast.error(error instanceof Error ? error.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -150,288 +160,175 @@ export function ProjectForm({ initialData }: ProjectFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Basic Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <GitPullRequest className="h-5 w-5" />
-            Project Details
+      <Card className="border-border/30 overflow-hidden">
+        <CardHeader className="bg-muted/30 border-b border-border/20">
+          <CardTitle className="text-base font-bold flex items-center gap-2">
+            <GitPullRequest className="h-4 w-4 text-primary" />
+            Basic Information
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Title */}
+        <CardContent className="space-y-4 pt-6">
           <div className="space-y-2">
-            <Label htmlFor="title">Project Title *</Label>
+            <Label htmlFor="title" className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Project Title *</Label>
             <Input
               id="title"
-              placeholder="My Awesome Project"
+              placeholder="e.g. Smart Attendance System"
               value={form.title}
-              onChange={(e) =>
-                setForm({ ...form, title: e.target.value })
-              }
-              className={errors.title ? "border-destructive" : ""}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              className={errors.title ? "border-destructive h-11 rounded-xl" : "h-11 rounded-xl"}
             />
-            {errors.title && (
-              <p className="text-xs text-destructive">{errors.title}</p>
-            )}
+            {errors.title && <p className="text-[10px] font-bold text-destructive uppercase tracking-wide">{errors.title}</p>}
           </div>
 
-          {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Description *</Label>
+            <Label htmlFor="description" className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Brief Summary *</Label>
             <Textarea
               id="description"
-              placeholder="Describe what your project does, the problem it solves, and key features..."
+              placeholder="Elevator pitch for your project..."
               value={form.description}
-              onChange={(e) =>
-                setForm({ ...form, description: e.target.value })
-              }
-              rows={4}
-              className={errors.description ? "border-destructive" : ""}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              rows={3}
+              className={errors.description ? "border-destructive rounded-xl resize-none" : "rounded-xl resize-none"}
             />
-            <div className="flex justify-between">
-              {errors.description && (
-                <p className="text-xs text-destructive">{errors.description}</p>
-              )}
-              <p className="text-xs text-muted-foreground ml-auto">
-                {form.description.length}/2000
-              </p>
+            <div className="flex justify-between items-center px-1">
+              {errors.description && <p className="text-[10px] font-bold text-destructive uppercase tracking-wide">{errors.description}</p>}
+              <p className="text-[10px] font-bold text-muted-foreground ml-auto">{form.description.length}/2000</p>
             </div>
           </div>
 
-          {/* Domain */}
           <div className="space-y-2">
-            <Label>Domain *</Label>
-            <Select
-              value={form.domain}
-              onValueChange={(value) => setForm({ ...form, domain: value ?? "" })}
-            >
-              <SelectTrigger className={errors.domain ? "border-destructive" : ""}>
-                <SelectValue placeholder="Select a domain" />
+            <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Domain *</Label>
+            <Select value={form.domain} onValueChange={(value) => setForm({ ...form, domain: value ?? "" })}>
+              <SelectTrigger className={errors.domain ? "border-destructive h-11 rounded-xl" : "h-11 rounded-xl"}>
+                <SelectValue placeholder="Categorize your project" />
               </SelectTrigger>
-              <SelectContent>
-                {DOMAINS.map((domain) => (
-                  <SelectItem key={domain} value={domain}>
-                    {domain}
-                  </SelectItem>
-                ))}
+              <SelectContent className="rounded-xl">
+                {DOMAINS.map((domain) => <SelectItem key={domain} value={domain}>{domain}</SelectItem>)}
               </SelectContent>
             </Select>
-            {errors.domain && (
-              <p className="text-xs text-destructive">{errors.domain}</p>
-            )}
+            {errors.domain && <p className="text-[10px] font-bold text-destructive uppercase tracking-wide">{errors.domain}</p>}
           </div>
         </CardContent>
       </Card>
 
-      {/* Links */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <LinkIcon className="h-5 w-5" />
-            Links
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* GitHub Repo */}
-          <div className="space-y-2">
-            <Label htmlFor="githubRepo">GitHub Repository *</Label>
-            <Input
-              id="githubRepo"
-              placeholder="https://github.com/username/repo"
-              value={form.githubRepo}
-              onChange={(e) =>
-                setForm({ ...form, githubRepo: e.target.value })
-              }
-              className={errors.githubRepo ? "border-destructive" : ""}
-            />
-            {errors.githubRepo && (
-              <p className="text-xs text-destructive">{errors.githubRepo}</p>
-            )}
-            <p className="text-xs text-muted-foreground">
-              We&apos;ll automatically fetch repo details, contributors, and tech stack
-            </p>
-          </div>
-
-          {/* Live Link */}
-          <div className="space-y-2">
-            <Label htmlFor="liveLink">Live Link (optional)</Label>
-            <Input
-              id="liveLink"
-              placeholder="https://myproject.com"
-              value={form.liveLink}
-              onChange={(e) =>
-                setForm({ ...form, liveLink: e.target.value })
-              }
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Tags */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Tags</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Add a tag (e.g. react, ml, api)"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addTag();
-                  }
-                }}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={addTag}
-                disabled={form.tags.length >= 10}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Suggested Tags */}
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Suggested Categories</p>
-              <div className="flex flex-wrap gap-1.5">
-                {[
-                  "react", "nextjs", "typescript", "node", "python",
-                  "machine-learning", "ai", "api", "database", "ui-ux",
-                  "tailwind", "docker", "blockchain", "web3", "mobile",
-                  "flutter", "ios", "android", "cloud", "security"
-                ]
-                  .filter(tag => !form.tags.includes(tag))
-                  .slice(0, 10) // Show top 10 relevant
-                  .map(tag => (
-                    <Badge
-                      key={tag}
-                      variant="outline"
-                      className="cursor-pointer hover:bg-primary/5 hover:border-primary/30 transition-all duration-200 py-1"
-                      onClick={() => {
-                        if (form.tags.length < 10) {
-                          setForm({ ...form, tags: [...form.tags, tag] });
-                        }
-                      }}
-                    >
-                      + {tag}
-                    </Badge>
-                  ))}
+      {/* Media & Links Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="border-border/30 overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b border-border/20">
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+              <Upload className="h-4 w-4 text-primary" />
+              Gallery
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-6">
+            {form.images.length > 0 && (
+              <div className="grid grid-cols-2 gap-2">
+                {form.images.map((url) => (
+                  <div key={url} className="relative group aspect-video rounded-xl overflow-hidden border border-border/40">
+                    <img src={url} alt="Screenshot" className="h-full w-full object-cover" />
+                    <button type="button" onClick={() => removeImage(url)} className="absolute top-1.5 right-1.5 p-1.5 rounded-full bg-destructive/90 text-white opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100 shadow-lg">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
               </div>
-            </div>
-          </div>
-          {form.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {form.tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="gap-1 pr-1">
-                  #{tag}
-                  <button
-                    type="button"
-                    onClick={() => removeTag(tag)}
-                    className="ml-1 rounded-full p-0.5 hover:bg-destructive/20"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-          )}
-          <p className="text-xs text-muted-foreground">
-            {form.tags.length}/10 tags • GitHub topics will also be added automatically
-          </p>
-        </CardContent>
-      </Card>
+            )}
 
-      {/* Images */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Upload className="h-5 w-5" />
-            Screenshots
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {/* Image grid */}
-          {form.images.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {form.images.map((url) => (
-                <div key={url} className="relative group aspect-video rounded-lg overflow-hidden border">
-                  <img
-                    src={url}
-                    alt="Screenshot"
-                    className="h-full w-full object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(url)}
-                    className="absolute top-1 right-1 p-1 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
+            {form.images.length < 5 && (
+              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border/50 rounded-2xl cursor-pointer hover:bg-primary/5 hover:border-primary/50 transition-all duration-300 group">
+                <div className="flex flex-col items-center gap-2">
+                  {imageUploading ? (
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  ) : (
+                    <>
+                      <div className="p-2 rounded-lg bg-muted group-hover:bg-primary/10 transition-colors">
+                        <Upload className="h-5 w-5 text-muted-foreground group-hover:text-primary" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[11px] font-extrabold uppercase tracking-tight">Select Screenshots</p>
+                        <p className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest mt-0.5">Multiple Allowed • Max 5</p>
+                      </div>
+                    </>
+                  )}
                 </div>
-              ))}
-            </div>
-          )}
-
-          {/* Upload button */}
-          {form.images.length < 5 && (
-            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-accent/50 transition-colors">
-              <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                {imageUploading ? (
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                ) : (
-                  <>
-                    <Upload className="h-6 w-6" />
-                    <span className="text-sm">Click to upload</span>
-                    <span className="text-xs">PNG, JPG, GIF, WebP (max 5MB)</span>
-                  </>
-                )}
-              </div>
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    if (file.size > 5 * 1024 * 1024) {
-                      toast.error("File too large. Max 5MB.");
-                      return;
-                    }
-                    uploadImage(file);
-                  }
+                <input type="file" accept="image/*" className="hidden" multiple onChange={(e) => {
+                  if (e.target.files) uploadImages(e.target.files);
                   e.target.value = "";
-                }}
-                disabled={imageUploading}
-              />
-            </label>
-          )}
-          <p className="text-xs text-muted-foreground">
-            {form.images.length}/5 images
-          </p>
+                }} disabled={imageUploading} />
+              </label>
+            )}
+            <p className="text-[10px] text-muted-foreground font-bold px-1 uppercase tracking-widest">
+              {5 - form.images.length} slots remaining
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/30 overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b border-border/20">
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+              <LinkIcon className="h-4 w-4 text-primary" />
+              Source & Demo
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-6">
+            <div className="space-y-2">
+              <Label htmlFor="githubRepo" className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">GitHub URL *</Label>
+              <Input id="githubRepo" placeholder="github.com/aissms-ioit/..." value={form.githubRepo} onChange={(e) => setForm({ ...form, githubRepo: e.target.value })} className={errors.githubRepo ? "border-destructive h-11 rounded-xl" : "h-11 rounded-xl"} />
+              {errors.githubRepo && <p className="text-[10px] font-bold text-destructive uppercase tracking-wide">{errors.githubRepo}</p>}
+            </div>
+            <div className="space-y-2 pt-1">
+              <Label htmlFor="liveLink" className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Live Demo URL</Label>
+              <Input id="liveLink" placeholder="https://..." value={form.liveLink} onChange={(e) => setForm({ ...form, liveLink: e.target.value })} className="h-11 rounded-xl" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tags Section */}
+      <Card className="border-border/30 overflow-hidden">
+        <CardHeader className="bg-muted/30 border-b border-border/20">
+          <CardTitle className="text-base font-bold flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            Project Tags
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-5 pt-6">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Add tech tag (e.g. react, node)"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }}
+              className="h-11 rounded-xl"
+            />
+            <Button type="button" variant="secondary" size="icon" onClick={addTag} disabled={form.tags.length >= 10} className="h-11 w-11 rounded-xl shrink-0"><Plus className="h-5 w-5" /></Button>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Recommended Features</p>
+            <div className="flex flex-wrap gap-1.5">
+              {["react", "nextjs", "typescript", "python", "ml", "database", "api", "mobile", "ios"]
+                .filter(tag => !form.tags.includes(tag)).slice(0, 9).map(tag => (
+                  <Badge key={tag} variant="outline" className="cursor-pointer hover:bg-primary/10 hover:border-primary/40 rounded-lg py-1 px-3 text-[10px] font-bold uppercase tracking-tighter transition-all" onClick={() => form.tags.length < 10 && setForm({ ...form, tags: [...form.tags, tag] })}>
+                    + {tag}
+                  </Badge>
+                ))}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {form.tags.map((tag) => (
+              <Badge key={tag} className="gap-1.5 py-1 px-3 rounded-lg bg-primary/10 text-primary border-primary/20 hover:bg-destructive/10 hover:text-destructive transition-colors group/tag">
+                #{tag}
+                <X className="h-3 w-3 cursor-pointer opacity-40 group-hover/tag:opacity-100" onClick={() => removeTag(tag)} />
+              </Badge>
+            ))}
+          </div>
         </CardContent>
       </Card>
 
-      <Button
-        type="submit"
-        size="lg"
-        className="w-full"
-        disabled={loading}
-      >
-        {loading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            {initialData ? "Updating project..." : "Creating project..."}
-          </>
-        ) : (
-          initialData ? "Update Project" : "Create Project"
-        )}
+      <Button type="submit" size="lg" className="w-full h-14 rounded-2xl text-lg font-extrabold shadow-xl shadow-primary/20 hover:scale-[1.01] transition-all" disabled={loading}>
+        {loading ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Processing...</> : initialData ? "Confirm Changes" : "Publish Project"}
       </Button>
     </form>
   );

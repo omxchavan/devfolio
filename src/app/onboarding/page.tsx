@@ -8,9 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, User as UserIcon, LinkIcon, Sparkles } from "lucide-react";
+import { Loader2, User as UserIcon, LinkIcon, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 import { onboardingSchema } from "@/lib/validations";
+import { ACADEMIC_YEARS } from "@/lib/constants";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -22,6 +23,8 @@ export default function OnboardingPage() {
     name: "",
     email: "",
     bio: "",
+    prn: "",
+    year: "" as string,
     socialLinks: {
       linkedin: "",
       twitter: "",
@@ -77,9 +80,7 @@ export default function OnboardingPage() {
       }
 
       toast.success("Profile setup complete!");
-      
       await update({ onboarded: true });
-      
       router.push("/dashboard");
       router.refresh();
     } catch (error) {
@@ -98,27 +99,18 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="relative min-h-[calc(100vh-4rem)]">
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-dot-grid" />
-      <div className="gradient-orb w-[400px] h-[400px] bg-primary/30 top-10 -left-20" />
-      <div className="gradient-orb w-[300px] h-[300px] bg-[oklch(0.60_0.22_300_/_30%)] bottom-10 right-0" />
-      
-      <div className="max-w-2xl mx-auto py-12 px-4 sm:px-6 relative z-10">
-        <div className="text-center mb-8 animate-fade-up">
-          <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary backdrop-blur-sm mb-4">
-            <Sparkles className="h-3 w-3 mr-1.5" />
-            Almost there
-          </div>
+    <div className="min-h-[calc(100vh-4rem)]">
+      <div className="max-w-2xl mx-auto py-12 px-4 sm:px-6">
+        <div className="text-center mb-8">
           <h1 className="text-3xl font-bold tracking-tight">Welcome to Devfolio!</h1>
           <p className="text-muted-foreground mt-2">Let&apos;s set up your profile before you continue.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6 animate-fade-up delay-2">
-          <Card className="border-border/30 bg-card/60 backdrop-blur-sm">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <UserIcon className="h-5 w-5 text-primary/60" />
+                <UserIcon className="h-5 w-5 text-muted-foreground" />
                 Basic Information
               </CardTitle>
             </CardHeader>
@@ -129,7 +121,7 @@ export default function OnboardingPage() {
                   id="name"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className={`bg-background/60 border-border/50 focus-visible:ring-primary/20 focus-visible:border-primary/40 ${errors.name ? "border-destructive" : ""}`}
+                  className={errors.name ? "border-destructive" : ""}
                 />
                 {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
               </div>
@@ -141,7 +133,7 @@ export default function OnboardingPage() {
                   type="email"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className={`bg-background/60 border-border/50 focus-visible:ring-primary/20 focus-visible:border-primary/40 ${errors.email ? "border-destructive" : ""}`}
+                  className={errors.email ? "border-destructive" : ""}
                 />
                 {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
               </div>
@@ -153,23 +145,62 @@ export default function OnboardingPage() {
                   placeholder="Tell us a little about yourself..."
                   value={form.bio}
                   onChange={(e) => setForm({ ...form, bio: e.target.value })}
-                  rows={4}
-                  className={`bg-background/60 border-border/50 focus-visible:ring-primary/20 focus-visible:border-primary/40 ${errors.bio ? "border-destructive" : ""}`}
+                  rows={3}
+                  className={errors.bio ? "border-destructive" : ""}
                 />
                 <div className="flex justify-between">
                   {errors.bio && <p className="text-xs text-destructive">{errors.bio}</p>}
-                  <p className="text-xs text-muted-foreground ml-auto">
-                    {form.bio.length}/500
-                  </p>
+                  <p className="text-xs text-muted-foreground ml-auto">{form.bio.length}/500</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-border/30 bg-card/60 backdrop-blur-sm">
+          <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <LinkIcon className="h-5 w-5 text-primary/60" />
+                <GraduationCap className="h-5 w-5 text-muted-foreground" />
+                College Details
+              </CardTitle>
+              <CardDescription>Your PRN and academic year for AISSMS IOIT IT department.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="prn">PRN (Roll Number)</Label>
+                  <Input
+                    id="prn"
+                    placeholder="e.g. 72312345"
+                    value={form.prn}
+                    onChange={(e) => setForm({ ...form, prn: e.target.value })}
+                    className={errors.prn ? "border-destructive" : ""}
+                  />
+                  {errors.prn && <p className="text-xs text-destructive">{errors.prn}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="year">Academic Year</Label>
+                  <select
+                    id="year"
+                    value={form.year}
+                    onChange={(e) => setForm({ ...form, year: e.target.value })}
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-ring"
+                  >
+                    <option value="">Select year</option>
+                    {ACADEMIC_YEARS.map((y) => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
+                  {errors.year && <p className="text-xs text-destructive">{errors.year}</p>}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <LinkIcon className="h-5 w-5 text-muted-foreground" />
                 Social Links
               </CardTitle>
               <CardDescription>Add your social profiles (optional but recommended)</CardDescription>
@@ -182,7 +213,7 @@ export default function OnboardingPage() {
                   placeholder="https://linkedin.com/in/username"
                   value={form.socialLinks.linkedin}
                   onChange={(e) => setForm({ ...form, socialLinks: { ...form.socialLinks, linkedin: e.target.value } })}
-                  className={`bg-background/60 border-border/50 focus-visible:ring-primary/20 focus-visible:border-primary/40 ${errors["socialLinks.linkedin"] ? "border-destructive" : ""}`}
+                  className={errors["socialLinks.linkedin"] ? "border-destructive" : ""}
                 />
                 {errors["socialLinks.linkedin"] && <p className="text-xs text-destructive">{errors["socialLinks.linkedin"]}</p>}
               </div>
@@ -194,7 +225,7 @@ export default function OnboardingPage() {
                   placeholder="https://twitter.com/username"
                   value={form.socialLinks.twitter}
                   onChange={(e) => setForm({ ...form, socialLinks: { ...form.socialLinks, twitter: e.target.value } })}
-                  className={`bg-background/60 border-border/50 focus-visible:ring-primary/20 focus-visible:border-primary/40 ${errors["socialLinks.twitter"] ? "border-destructive" : ""}`}
+                  className={errors["socialLinks.twitter"] ? "border-destructive" : ""}
                 />
                 {errors["socialLinks.twitter"] && <p className="text-xs text-destructive">{errors["socialLinks.twitter"]}</p>}
               </div>
@@ -206,14 +237,14 @@ export default function OnboardingPage() {
                   placeholder="https://yourwebsite.com"
                   value={form.socialLinks.portfolio}
                   onChange={(e) => setForm({ ...form, socialLinks: { ...form.socialLinks, portfolio: e.target.value } })}
-                  className={`bg-background/60 border-border/50 focus-visible:ring-primary/20 focus-visible:border-primary/40 ${errors["socialLinks.portfolio"] ? "border-destructive" : ""}`}
+                  className={errors["socialLinks.portfolio"] ? "border-destructive" : ""}
                 />
                 {errors["socialLinks.portfolio"] && <p className="text-xs text-destructive">{errors["socialLinks.portfolio"]}</p>}
               </div>
             </CardContent>
           </Card>
 
-          <Button type="submit" size="lg" className="w-full bg-gradient-to-r from-primary to-[oklch(0.60_0.22_300)] hover:opacity-90 text-white shadow-lg shadow-primary/20 rounded-xl border-0 transition-all duration-300" disabled={loading}>
+          <Button type="submit" size="lg" className="w-full rounded-lg" disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Complete Setup
           </Button>

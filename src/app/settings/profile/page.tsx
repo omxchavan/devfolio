@@ -23,23 +23,21 @@ export default async function ProfileSettingsPage() {
   const initialData = JSON.parse(JSON.stringify(user));
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
+    <div className="container mx-auto px-4 py-10 max-w-2xl">
       <div className="flex flex-col gap-6">
-        <div className="flex items-center gap-3 animate-fade-down">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-primary/10 to-[oklch(0.60_0.22_300_/_10%)]">
-            <Settings className="h-5 w-5 text-primary" />
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-muted">
+            <Settings className="h-5 w-5 text-muted-foreground" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Edit Profile</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Edit Profile</h1>
             <p className="text-muted-foreground text-sm">
-              Update your public profile and let the community know about you.
+              Update your public profile and college details.
             </p>
           </div>
         </div>
 
-        <div className="rounded-2xl p-6 md:p-8 border border-border/30 bg-card/60 backdrop-blur-sm animate-fade-up delay-1">
-          <ProfileForm initialData={initialData} />
-        </div>
+        <ProfileForm initialData={initialData} />
       </div>
     </div>
   );

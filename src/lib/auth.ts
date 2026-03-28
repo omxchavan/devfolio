@@ -28,12 +28,12 @@ export const authOptions: NextAuthOptions = {
 
       try {
         await connectDB();
-        const existingUser = await User.findOne({
-          githubUsername: profile.login,
+        let user = await User.findOne({
+          githubUsername: { $regex: new RegExp(`^${profile.login}$`, 'i') },
         });
 
-        if (!existingUser) {
-          await User.create({
+        if (!user) {
+          user = await User.create({
             name: profile.name || profile.login,
             email: profile.email || `${profile.login}@github.com`,
             image: (profile as Record<string, unknown>).avatar_url as string || "",
@@ -42,6 +42,37 @@ export const authOptions: NextAuthOptions = {
               github: `https://github.com/${profile.login}`,
             },
           });
+        }
+
+        // Link user to existing projects they contributed to
+        const Project = require("@/models/Project").default;
+        // Find projects where this user is a contributor but not linked
+        const projectsToLink = await Project.find({
+          "contributors.githubUsername": { $regex: new RegExp(`^${profile.login}$`, 'i') },
+          "contributors.isLinked": false
+        });
+
+        if (projectsToLink.length > 0) {
+          const projectIds = projectsToLink.map((p: any) => p._id);
+
+          // Update user to include these projects
+          await User.findByIdAndUpdate(user._id, {
+            $addToSet: { projects: { $each: projectIds } }
+          });
+
+          // Update the projects to link this contributor
+          await Project.updateMany(
+            { _id: { $in: projectIds } },
+            {
+              $set: {
+                "contributors.$[elem].userId": user._id,
+                "contributors.$[elem].isLinked": true
+              }
+            },
+            {
+              arrayFilters: [{ "elem.githubUsername": { $regex: new RegExp(`^${profile.login}$`, 'i') } }]
+            }
+          );
         }
 
         return true;
@@ -58,10 +89,12 @@ export const authOptions: NextAuthOptions = {
 
       if (profile?.login) {
         await connectDB();
-        const user = await User.findOne({ githubUsername: profile.login });
+        const user = await User.findOne({
+          githubUsername: { $regex: new RegExp(`^${profile.login}$`, 'i') },
+        });
         if (user) {
           token.id = user._id.toString();
-          token.githubUsername = profile.login;
+          token.githubUsername = user.githubUsername; // Ensure canonical casing from DB
           token.onboarded = user.onboarded;
           token.role = user.role || "user";
         }

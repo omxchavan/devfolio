@@ -43,13 +43,12 @@ export const updateProfileSchema = z.object({
     .optional(),
   prn: z
     .string()
+    .min(1, "PRN is required")
     .max(20, "PRN must be under 20 characters")
-    .trim()
-    .optional(),
-  year: z
-    .enum(ACADEMIC_YEARS)
-    .or(z.literal(""))
-    .optional(),
+    .trim(),
+  year: z.enum(ACADEMIC_YEARS as unknown as [string, ...string[]], {
+    message: "Academic year is required",
+  }),
   socialLinks: z
     .object({
       linkedin: urlSchema,
@@ -65,13 +64,12 @@ export const onboardingSchema = z.object({
   bio: z.string().max(500, "Bio must be under 500 characters").trim().optional(),
   prn: z
     .string()
+    .min(1, "PRN is required")
     .max(20, "PRN must be under 20 characters")
-    .trim()
-    .optional(),
-  year: z
-    .enum(ACADEMIC_YEARS)
-    .or(z.literal(""))
-    .optional(),
+    .trim(),
+  year: z.enum(ACADEMIC_YEARS as unknown as [string, ...string[]], {
+    message: "Academic year is required",
+  }),
   socialLinks: z
     .object({
       linkedin: urlSchema,

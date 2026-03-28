@@ -77,11 +77,13 @@ export async function fetchContributors(owner: string, repo: string) {
       `https://api.github.com/repos/${owner}/${repo}/contributors?per_page=30`
     );
 
-    return data.map((c) => ({
-      githubUsername: c.login,
-      avatarUrl: c.avatar_url,
-      contributions: c.contributions,
-    }));
+    return data
+      .filter((c) => c.login)
+      .map((c) => ({
+        githubUsername: c.login,
+        avatarUrl: c.avatar_url,
+        contributions: c.contributions,
+      }));
   } catch {
     return [];
   }

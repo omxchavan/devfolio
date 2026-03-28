@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { GitBranch, Link2, Globe, FolderGit2, X, Mail, GraduationCap, Hash } from "lucide-react";
+import { GitBranch, Link2, Globe, FolderGit2, X, Mail, GraduationCap, Hash, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { IUser } from "@/types";
 
@@ -89,29 +89,37 @@ export function ProfileCard({ user, compact = false, isOwner = false }: ProfileC
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-1 pt-3 border-t border-border">
+        <div className="space-y-2 pt-4 border-t border-border">
           {user.socialLinks?.github && (
             <Link href={user.socialLinks.github} target="_blank" rel="noopener noreferrer"
-              className={buttonVariants({ variant: "ghost", size: "icon", className: "h-8 w-8 text-muted-foreground hover:text-foreground rounded-full" })}>
-              <GitBranch className="h-4 w-4" />
+              className="group flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
+              <GitBranch className="h-4 w-4 opacity-70 group-hover:opacity-100" />
+              <span>GitHub</span>
+              <ExternalLink className="ml-auto h-3 w-3 opacity-0 group-hover:opacity-40 transition-opacity" />
             </Link>
           )}
           {user.socialLinks?.linkedin && (
             <Link href={user.socialLinks.linkedin} target="_blank" rel="noopener noreferrer"
-              className={buttonVariants({ variant: "ghost", size: "icon", className: "h-8 w-8 text-muted-foreground hover:text-foreground rounded-full" })}>
-              <Link2 className="h-4 w-4" />
+              className="group flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
+              <Link2 className="h-4 w-4 opacity-70 group-hover:opacity-100 text-[#0077b5]" />
+              <span>LinkedIn</span>
+              <ExternalLink className="ml-auto h-3 w-3 opacity-0 group-hover:opacity-40 transition-opacity" />
             </Link>
           )}
           {user.socialLinks?.twitter && (
             <Link href={user.socialLinks.twitter} target="_blank" rel="noopener noreferrer"
-              className={buttonVariants({ variant: "ghost", size: "icon", className: "h-8 w-8 text-muted-foreground hover:text-foreground rounded-full" })}>
-              <X className="h-4 w-4" />
+              className="group flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
+              <X className="h-4 w-4 opacity-70 group-hover:opacity-100" />
+              <span>Twitter</span>
+              <ExternalLink className="ml-auto h-3 w-3 opacity-0 group-hover:opacity-40 transition-opacity" />
             </Link>
           )}
           {user.socialLinks?.portfolio && (
             <Link href={user.socialLinks.portfolio} target="_blank" rel="noopener noreferrer"
-              className={buttonVariants({ variant: "ghost", size: "icon", className: "h-8 w-8 text-muted-foreground hover:text-foreground rounded-full" })}>
-              <Globe className="h-4 w-4" />
+              className="group flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
+              <Globe className="h-4 w-4 opacity-70 group-hover:opacity-100 text-emerald-500" />
+              <span>Portfolio</span>
+              <ExternalLink className="ml-auto h-3 w-3 opacity-0 group-hover:opacity-40 transition-opacity" />
             </Link>
           )}
         </div>

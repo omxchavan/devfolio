@@ -149,7 +149,7 @@ export function ProjectForm({ initialData }: ProjectFormProps) {
       } else {
         router.push("/dashboard");
       }
-      setTimeout(() => router.refresh(), 500);
+      router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Something went wrong");
     } finally {

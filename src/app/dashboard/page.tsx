@@ -7,13 +7,18 @@ import User from "@/models/User";
 import { IProject } from "@/types";
 import { ProjectCard } from "@/components/project-card";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { Plus, FolderGit2, Star, GitPullRequest } from "lucide-react";
+import { Plus, FolderGit2, Star, GitPullRequest, Globe } from "lucide-react";
 import Link from "next/link";
 import { cache } from "react";
 
 const getCachedUserProjects = cache(async (userId: string) => {
   await connectDB();
-  const projects = await Project.find({ owner: userId })
+  const projects = await Project.find({
+    $or: [
+      { owner: userId },
+      { "contributors.userId": userId, "contributors.isLinked": true }
+    ]
+  })
     .sort({ createdAt: -1 })
     .populate({ path: "owner", model: User, select: "name image githubUsername" })
     .lean();
@@ -25,6 +30,11 @@ export default async function DashboardPage() {
   if (!session) redirect("/api/auth/signin");
 
   const projects = await getCachedUserProjects(session.user.id);
+  const ownedProjects = projects.filter(p => (p.owner as any)?._id?.toString() === session.user.id || p.owner?.toString() === session.user.id);
+  const contributedProjects = projects.filter(p => {
+    const ownerId = (p.owner as any)?._id?.toString() || p.owner?.toString();
+    return ownerId !== session.user.id;
+  });
   const totalStars = projects.reduce((sum, p) => sum + (p.stars || 0), 0);
 
   return (
@@ -47,15 +57,26 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="card-elevated p-5">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-500/10">
               <FolderGit2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{projects.length}</p>
-              <p className="text-xs text-muted-foreground">Total Projects</p>
+              <p className="text-2xl font-bold">{ownedProjects.length}</p>
+              <p className="text-xs text-muted-foreground">Owned Projects</p>
+            </div>
+          </div>
+        </div>
+        <div className="card-elevated p-5">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-500/10">
+              <GitPullRequest className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{contributedProjects.length}</p>
+              <p className="text-xs text-muted-foreground">Contributing To</p>
             </div>
           </div>
         </div>
@@ -70,10 +91,10 @@ export default async function DashboardPage() {
             </div>
           </div>
         </div>
-        <div className="card-elevated p-5 col-span-2 md:col-span-1">
+        <div className="card-elevated p-5">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-500/10">
-              <GitPullRequest className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              <Globe className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
               <p className="text-2xl font-bold">{projects.filter(p => p.liveLink).length}</p>

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
@@ -13,6 +14,10 @@ import {
   fetchLanguages,
   fetchReadme,
 } from "@/lib/github";
+
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 export async function GET(request: Request) {
   try {
@@ -107,6 +112,15 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check for duplicate GitHub repo
+    const existingProject = await Project.findOne({ githubRepo: sanitized.githubRepo }).lean();
+    if (existingProject) {
+      return NextResponse.json(
+        { error: "This GitHub repository has already been submitted as a project" },
+        { status: 409 }
+      );
+    }
+
     // Fetch GitHub data
     const [repoDetails, contributors, languages, readme] = await Promise.all([
       fetchRepoDetails(parsed.owner, parsed.repo),
@@ -118,7 +132,7 @@ export async function POST(request: Request) {
     // Link contributors to existing users
     const contributorUsernames = contributors.map((c) => c.githubUsername);
     const existingUsers = await User.find({
-      githubUsername: { $in: contributorUsernames.map((u) => new RegExp(`^${u}$`, "i")) },
+      githubUsername: { $in: contributorUsernames.map((u) => new RegExp(`^${escapeRegex(u)}$`, "i")) },
     }).lean();
 
     const userMap = new Map(
@@ -170,6 +184,10 @@ export async function POST(request: Request) {
         { $addToSet: { projects: project._id } }
       );
     }
+
+    // Bust server caches so explore/profile pages update immediately
+    revalidateTag("projects", "page");
+    revalidateTag("profiles", "page");
 
     return NextResponse.json(project, { status: 201 });
   } catch (error) {

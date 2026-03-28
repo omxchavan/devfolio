@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
@@ -63,6 +64,9 @@ export async function DELETE(
 
     await Project.findByIdAndDelete(id);
 
+    revalidateTag("projects", "page");
+    revalidateTag("profiles", "page");
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting project:", error);
@@ -102,6 +106,8 @@ export async function PUT(
 
     project.set(sanitized);
     await project.save();
+
+    revalidateTag("projects", "page");
 
     return NextResponse.json(project);
   } catch (error) {

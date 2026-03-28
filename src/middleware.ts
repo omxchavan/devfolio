@@ -23,7 +23,9 @@ export default withAuth(
         const isAuthRequired = [
           "/dashboard",
           "/create-project",
-          "/onboarding"
+          "/onboarding",
+          "/admin",
+          "/settings"
         ].some(path => req.nextUrl.pathname.startsWith(path));
         
         if (isAuthRequired) return !!token;

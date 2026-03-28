@@ -2,6 +2,11 @@ import type { NextAuthOptions } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
+import { revalidateTag } from "next/cache";
+
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 if (!process.env.GITHUB_CLIENT_ID || !process.env.GITHUB_CLIENT_SECRET) {
   throw new Error("Missing GitHub OAuth credentials");
@@ -29,7 +34,7 @@ export const authOptions: NextAuthOptions = {
       try {
         await connectDB();
         let user = await User.findOne({
-          githubUsername: { $regex: new RegExp(`^${profile.login}$`, 'i') },
+          githubUsername: { $regex: new RegExp(`^${escapeRegex(profile.login)}$`, 'i') },
         });
 
         if (!user) {
@@ -46,10 +51,16 @@ export const authOptions: NextAuthOptions = {
 
         // Link user to existing projects they contributed to
         const Project = require("@/models/Project").default;
-        // Find projects where this user is a contributor but not linked
+        // Find projects where this user is a contributor but not yet linked
+        // Use $elemMatch to ensure both conditions match the SAME array element
+        const escapedLogin = escapeRegex(profile.login);
         const projectsToLink = await Project.find({
-          "contributors.githubUsername": { $regex: new RegExp(`^${profile.login}$`, 'i') },
-          "contributors.isLinked": false
+          contributors: {
+            $elemMatch: {
+              githubUsername: { $regex: new RegExp(`^${escapedLogin}$`, 'i') },
+              isLinked: false
+            }
+          }
         });
 
         if (projectsToLink.length > 0) {
@@ -70,9 +81,13 @@ export const authOptions: NextAuthOptions = {
               }
             },
             {
-              arrayFilters: [{ "elem.githubUsername": { $regex: new RegExp(`^${profile.login}$`, 'i') } }]
+              arrayFilters: [{ "elem.githubUsername": { $regex: new RegExp(`^${escapedLogin}$`, 'i') } }]
             }
           );
+
+          // Bust caches so project/profile pages reflect the linking immediately
+          revalidateTag("projects", "page");
+          revalidateTag("profiles", "page");
         }
 
         return true;
@@ -96,7 +111,7 @@ export const authOptions: NextAuthOptions = {
         // Find user by githubUsername (if login available) OR by email
         const user = await User.findOne({
           $or: [
-            ...(profile?.login ? [{ githubUsername: { $regex: new RegExp(`^${profile.login}$`, 'i') } }] : []),
+            ...(profile?.login ? [{ githubUsername: { $regex: new RegExp(`^${escapeRegex(profile.login)}$`, 'i') } }] : []),
             ...(token.email ? [{ email: token.email }] : [])
           ]
         });

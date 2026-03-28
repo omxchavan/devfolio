@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
@@ -60,6 +61,8 @@ export async function PUT(request: Request) {
 
     user.set(sanitized);
     await user.save();
+
+    revalidateTag("profiles", "page");
 
     return NextResponse.json(user);
   } catch (error) {

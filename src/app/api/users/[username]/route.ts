@@ -11,7 +11,8 @@ export async function GET(
     await connectDB();
     const { username } = await params;
 
-    const user = await User.findOne({ githubUsername: username })
+    const escaped = username.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const user = await User.findOne({ githubUsername: { $regex: new RegExp(`^${escaped}$`, 'i') } })
       .populate({
         path: "projects",
         model: Project,

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { revalidateTag } from "next/cache";
+import { revalidateTag, revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
@@ -32,6 +32,8 @@ export async function POST(request: Request) {
     await user.save();
 
     revalidateTag("profiles", "page");
+    revalidatePath("/dashboard");
+    revalidatePath(`/profile/${user.githubUsername}`);
 
     return NextResponse.json(user);
   } catch (error) {

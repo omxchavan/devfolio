@@ -115,9 +115,19 @@ export async function fetchReadme(owner: string, repo: string) {
       }
     );
 
-    if (!response.ok) return "";
+    if (!response.ok || !response.body) return "";
 
-    const text = await response.text();
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let text = "";
+    
+    while (text.length < 2000) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      text += decoder.decode(value, { stream: true });
+    }
+    
+    reader.cancel(); // Stop receiving the rest of the file
     // Return first 1000 chars as excerpt
     return text.slice(0, 1000);
   } catch {

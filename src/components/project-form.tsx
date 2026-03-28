@@ -144,12 +144,15 @@ export function ProjectForm({ initialData }: ProjectFormProps) {
       }
 
       toast.success(`Project ${initialData ? "updated" : "created"} successfully!`);
+      
+      // Perform refresh immediately such that next navigation sees fresh data
+      router.refresh();
+
       if (initialData) {
         router.push(`/project/${initialData._id}`);
       } else {
         router.push("/dashboard");
       }
-      router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Something went wrong");
     } finally {

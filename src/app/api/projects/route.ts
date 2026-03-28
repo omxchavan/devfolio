@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { revalidateTag } from "next/cache";
+import { revalidateTag, revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
@@ -114,7 +114,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Run duplicate check and GitHub API fetches in parallel
+    // 1. Fetch data in parallel
     const [existingProject, repoDetails, contributors, languages, readme] = await Promise.all([
       Project.findOne({ githubRepo: sanitized.githubRepo }).lean(),
       fetchRepoDetails(parsed.owner, parsed.repo),
@@ -130,16 +130,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Link contributors to existing users
+    // Link contributors
     const contributorUsernames = contributors.map((c) => c.githubUsername);
     const existingUsers = await User.find({
       githubUsername: { $in: contributorUsernames.map((u) => new RegExp(`^${escapeRegex(u)}$`, "i")) },
     }).lean();
 
-    const userMap = new Map(
-      existingUsers.map((u) => [u.githubUsername.toLowerCase(), u._id])
-    );
-
+    const userMap = new Map(existingUsers.map((u) => [u.githubUsername.toLowerCase(), u._id]));
     const linkedContributors = contributors.map((c) => {
       const lowerUsername = c.githubUsername.toLowerCase();
       return {
@@ -150,7 +147,7 @@ export async function POST(request: Request) {
       };
     });
 
-    // Create project
+    // 2. Create the project
     const project = await Project.create({
       title: sanitized.title,
       description: sanitized.description,
@@ -160,7 +157,7 @@ export async function POST(request: Request) {
       tags: [
         ...sanitized.tags.map((t) => t.toLowerCase()),
         ...repoDetails.topics,
-      ].filter((t, i, a) => a.indexOf(t) === i), // deduplicate
+      ].filter((t, i, a) => a.indexOf(t) === i),
       images: sanitized.images,
       owner: session.user.id,
       contributors: linkedContributors,
@@ -169,11 +166,9 @@ export async function POST(request: Request) {
       readmeExcerpt: readme,
     });
 
-    // Update owner and contributor profiles in parallel
+    // 3. Update profiles
     const profileUpdates: Promise<any>[] = [
-      User.findByIdAndUpdate(session.user.id, {
-        $addToSet: { projects: project._id },
-      }),
+      User.findByIdAndUpdate(session.user.id, { $addToSet: { projects: project._id } }),
     ];
 
     const linkedUserIds = linkedContributors
@@ -182,18 +177,19 @@ export async function POST(request: Request) {
 
     if (linkedUserIds.length > 0) {
       profileUpdates.push(
-        User.updateMany(
-          { _id: { $in: linkedUserIds } },
-          { $addToSet: { projects: project._id } }
-        )
+        User.updateMany({ _id: { $in: linkedUserIds } }, { $addToSet: { projects: project._id } })
       );
     }
 
     await Promise.all(profileUpdates);
 
-    // Bust server caches so explore/profile pages update immediately
+    // 4. Revalidate
     revalidateTag("projects", "page");
     revalidateTag("profiles", "page");
+    revalidatePath("/");
+    revalidatePath("/dashboard");
+    revalidatePath("/explore");
+    revalidatePath(`/profile/${session.user.githubUsername}`);
 
     return NextResponse.json(project, { status: 201 });
   } catch (error) {

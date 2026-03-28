@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { revalidateTag } from "next/cache";
+import { revalidateTag, revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
@@ -69,6 +69,10 @@ export async function DELETE(
 
     revalidateTag("projects", "page");
     revalidateTag("profiles", "page");
+    revalidatePath("/");
+    revalidatePath("/dashboard");
+    revalidatePath("/explore");
+    revalidatePath(`/project/${id}`);
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -113,6 +117,10 @@ export async function PUT(
     await project.save();
 
     revalidateTag("projects", "page");
+    revalidatePath("/");
+    revalidatePath("/dashboard");
+    revalidatePath("/explore");
+    revalidatePath(`/project/${id}`);
 
     return NextResponse.json(project);
   } catch (error) {

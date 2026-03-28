@@ -78,10 +78,12 @@ export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
+      console.warn("Project submission attempt failed: Missing session.user.id", { email: session?.user?.email });
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     if (!session.user.githubUsername) {
+      console.warn("Project submission attempt failed: Missing session.user.githubUsername", { id: session.user.id });
       return NextResponse.json(
         { error: "GitHub username required in profile" },
         { status: 403 }

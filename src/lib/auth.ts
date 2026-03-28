@@ -87,14 +87,23 @@ export const authOptions: NextAuthOptions = {
         token.onboarded = session.onboarded;
       }
 
-      if (profile?.login) {
+      // If we're signing in, profile will be present. 
+      // Otherwise, if the token is missing critical attributes like 'id', 
+      // we attempt to re-hydrate it from the database for a resilient session.
+      if (profile?.login || !token.id) {
         await connectDB();
+        
+        // Find user by githubUsername (if login available) OR by email
         const user = await User.findOne({
-          githubUsername: { $regex: new RegExp(`^${profile.login}$`, 'i') },
+          $or: [
+            ...(profile?.login ? [{ githubUsername: { $regex: new RegExp(`^${profile.login}$`, 'i') } }] : []),
+            ...(token.email ? [{ email: token.email }] : [])
+          ]
         });
+
         if (user) {
           token.id = user._id.toString();
-          token.githubUsername = user.githubUsername; // Ensure canonical casing from DB
+          token.githubUsername = user.githubUsername; // Canonical casing
           token.onboarded = user.onboarded;
           token.role = user.role || "user";
         }

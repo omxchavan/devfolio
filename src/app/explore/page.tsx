@@ -16,34 +16,43 @@ interface ExplorePageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-const getCachedFilteredProjects = unstable_cache(
-  async (params: Record<string, string | undefined>) => {
-    await connectDB();
-    const query = searchQuerySchema.parse(params);
-    const filter: Record<string, unknown> = {};
-    if (query.domain) filter.domain = query.domain;
-    if (query.tags) {
-      const tagList = query.tags.split(",").map((t: string) => t.trim().toLowerCase());
-      filter.tags = { $in: tagList };
-    }
-    if (query.q) {
-      filter.$or = [
-        { title: { $regex: query.q, $options: "i" } },
-        { tags: { $elemMatch: { $regex: query.q, $options: "i" } } },
-      ];
-    }
-    const sort: Record<string, 1 | -1> =
-      query.sort === "stars" ? { stars: -1, createdAt: -1 } : { createdAt: -1 };
-    const projects = await Project.find(filter)
-      .sort(sort)
-      .limit(50)
-      .populate({ path: "owner", model: User, select: "name image githubUsername prn year" })
-      .lean();
-    return JSON.parse(JSON.stringify(projects)) as IProject[];
-  },
-  ["explore-projects"],
-  { revalidate: 60, tags: ["projects"] }
-);
+const getCachedFilteredProjects = async (params: Record<string, string | undefined>) => {
+  // Serialize params deterministically
+  const queryObj: Record<string, string> = {};
+  for (const key of Object.keys(params).sort()) {
+    if (params[key]) queryObj[key] = params[key] as string;
+  }
+  const cacheKey = new URLSearchParams(queryObj).toString();
+
+  return unstable_cache(
+    async () => {
+      await connectDB();
+      const query = searchQuerySchema.parse(params);
+      const filter: Record<string, unknown> = {};
+      if (query.domain) filter.domain = query.domain;
+      if (query.tags) {
+        const tagList = query.tags.split(",").map((t: string) => t.trim().toLowerCase());
+        filter.tags = { $in: tagList };
+      }
+      if (query.q) {
+        filter.$or = [
+          { title: { $regex: query.q, $options: "i" } },
+          { tags: { $elemMatch: { $regex: query.q, $options: "i" } } },
+        ];
+      }
+      const sort: Record<string, 1 | -1> =
+        query.sort === "stars" ? { stars: -1, createdAt: -1 } : { createdAt: -1 };
+      const projects = await Project.find(filter)
+        .sort(sort)
+        .limit(50)
+        .populate({ path: "owner", model: User, select: "name image githubUsername prn year" })
+        .lean();
+      return JSON.parse(JSON.stringify(projects)) as IProject[];
+    },
+    ["explore-projects", cacheKey],
+    { revalidate: 60, tags: ["projects"] }
+  )();
+};
 
 function ProjectsLoading() {
   return (
@@ -100,7 +109,7 @@ export default async function ExplorePage(props: ExplorePageProps) {
   return (
     <div className="min-h-screen bg-background selection:bg-primary/10">
       {/* Top Page Header (Non-sticky to avoid clashing with navbar) */}
-      <div className="bg-muted/30 border-b border-border/10 py-16 relative overflow-hidden">
+      <div className="bg-muted/40 border-b border-border py-16 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
         
         <div className="container mx-auto px-4 relative z-10">

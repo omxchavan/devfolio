@@ -25,25 +25,27 @@ export default async function AdminPage(props: { searchParams: Promise<{ tab?: s
   const searchParams = await props.searchParams;
   const currentTab = searchParams.tab === "projects" ? "projects" : "users";
 
-  // Fetch all users
-  const users = await User.find()
-    .sort({ createdAt: -1 })
-    .select("name email image githubUsername bio prn year role projects socialLinks createdAt")
-    .lean();
+  let usersData: any[] = [];
+  if (currentTab === "users") {
+    const users = await User.find()
+      .sort({ createdAt: -1 })
+      .select("name email image githubUsername bio prn year role projects socialLinks createdAt")
+      .lean();
 
-  const usersData = users.map((u: any) => ({
-    _id: u._id.toString(),
-    name: u.name,
-    email: u.email,
-    image: u.image,
-    githubUsername: u.githubUsername,
-    bio: u.bio,
-    prn: u.prn || "",
-    year: u.year || "",
-    role: u.role || "user",
-    projectCount: u.projects?.length || 0,
-    createdAt: u.createdAt.toISOString(),
-  }));
+    usersData = users.map((u: any) => ({
+      _id: u._id.toString(),
+      name: u.name,
+      email: u.email,
+      image: u.image,
+      githubUsername: u.githubUsername,
+      bio: u.bio,
+      prn: u.prn || "",
+      year: u.year || "",
+      role: u.role || "user",
+      projectCount: u.projects?.length || 0,
+      createdAt: u.createdAt.toISOString(),
+    }));
+  }
 
   let projectsData: any[] = [];
   if (currentTab === "projects") {

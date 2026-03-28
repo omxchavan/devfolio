@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useTransition, useEffect } from "react";
 import { DOMAINS } from "@/lib/constants";
 import { SlidersHorizontal, X, ArrowDownWideNarrow } from "lucide-react";
 
@@ -13,9 +14,17 @@ const POPULAR_TAGS = [
 export function FilterSidebar() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const currentDomain = searchParams.get("domain") || "";
-  const currentTags = searchParams.get("tags")?.split(",").filter(Boolean) || [];
-  const currentSort = searchParams.get("sort") || "latest";
+  const [isPending, startTransition] = useTransition();
+  const [optimisticParams, setOptimisticParams] = useState<URLSearchParams | null>(null);
+
+  useEffect(() => {
+    setOptimisticParams(null);
+  }, [searchParams]);
+
+  const activeParams = optimisticParams || new URLSearchParams(searchParams.toString());
+  const currentDomain = activeParams.get("domain") || "";
+  const currentTags = activeParams.get("tags")?.split(",").filter(Boolean) || [];
+  const currentSort = activeParams.get("sort") || "latest";
 
   function updateParams(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -25,7 +34,13 @@ export function FilterSidebar() {
       params.delete(key);
     }
     params.delete("page");
-    router.push(`/explore?${params.toString()}`);
+    
+    // Setting optimistic params for immediate UI feedback
+    setOptimisticParams(new URLSearchParams(params.toString()));
+    
+    startTransition(() => {
+      router.push(`/explore?${params.toString()}`);
+    });
   }
 
   function toggleTag(tag: string) {

@@ -43,6 +43,9 @@ const ProjectSchema = new Schema<IProject>(
 // Compound index for efficient filtering
 ProjectSchema.index({ domain: 1, createdAt: -1 });
 ProjectSchema.index({ tags: 1, createdAt: -1 });
+ProjectSchema.index({ createdAt: -1 });
+ProjectSchema.index({ stars: -1, createdAt: -1 });
+ProjectSchema.index({ owner: 1, createdAt: -1 });
 
 const Project: Model<IProject> =
   mongoose.models.Project ||

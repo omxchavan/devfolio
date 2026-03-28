@@ -12,8 +12,8 @@ const getCachedFeaturedProjects = unstable_cache(
   async () => {
     await connectDB();
     const projects = await Project.find()
-      .sort({ stars: -1, createdAt: -1 })
-      .limit(6)
+      .sort({ createdAt: -1 })
+      .limit(3)
       .populate({ path: "owner", model: User, select: "name image githubUsername prn year" })
       .lean();
     return JSON.parse(JSON.stringify(projects)) as IProject[];
@@ -136,8 +136,8 @@ export default async function Home() {
       <section className="container mx-auto px-4 space-y-10">
         <div className="flex items-end justify-between border-b border-border pb-6">
           <div className="space-y-1">
-            <h2 className="text-3xl font-bold tracking-tight">Project Gallery</h2>
-            <p className="text-muted-foreground">Highlighting the best work from IOIT IT students.</p>
+            <h2 className="text-3xl font-bold tracking-tight">Recent Work</h2>
+            <p className="text-muted-foreground">Discover the latest submissions from IOIT IT students.</p>
           </div>
           <Link
             href="/explore"

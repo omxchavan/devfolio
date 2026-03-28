@@ -27,8 +27,11 @@ const getCachedProjectData = unstable_cache(
         .lean();
       if (!project) return null;
       return JSON.parse(JSON.stringify(project)) as IProject;
-    } catch {
-      return null;
+    } catch (error: any) {
+      if (error?.name === 'CastError' || error?.kind === 'ObjectId') {
+        return null;
+      }
+      throw error;
     }
   },
   ["project-detail"],
@@ -45,7 +48,7 @@ export default async function ProjectPage(props: ProjectPageProps) {
   const owner = project.owner as IUser;
   const isOwner = session?.user?.id === (owner as any)._id?.toString();
   const teamMembers = project.contributors?.filter(
-    (c: any) => c.githubUsername !== owner.githubUsername
+    (c: any) => c.githubUsername.toLowerCase() !== owner.githubUsername.toLowerCase()
   ) || [];
 
   return (

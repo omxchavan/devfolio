@@ -14,20 +14,25 @@ export const metadata: Metadata = {
   description: "A GitHub-backed project showcase platform for developers and students.",
 };
 
-export default function RootLayout({
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getServerSession(authOptions);
+
   return (
     <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
       <body className={`${inter.className} min-h-screen flex flex-col`}>
-        <AuthProvider>
+        <AuthProvider session={session}>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
             enableSystem
-            
+            disableTransitionOnChange
           >
             <Navbar />
             <main className="flex-1">{children}</main>

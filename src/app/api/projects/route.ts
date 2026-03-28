@@ -116,19 +116,22 @@ export async function POST(request: Request) {
     // Link contributors to existing users
     const contributorUsernames = contributors.map((c) => c.githubUsername);
     const existingUsers = await User.find({
-      githubUsername: { $in: contributorUsernames },
+      githubUsername: { $in: contributorUsernames.map((u) => new RegExp(`^${u}$`, "i")) },
     }).lean();
 
     const userMap = new Map(
-      existingUsers.map((u) => [u.githubUsername, u._id])
+      existingUsers.map((u) => [u.githubUsername.toLowerCase(), u._id])
     );
 
-    const linkedContributors = contributors.map((c) => ({
-      githubUsername: c.githubUsername,
-      avatarUrl: c.avatarUrl,
-      userId: userMap.get(c.githubUsername) || null,
-      isLinked: userMap.has(c.githubUsername),
-    }));
+    const linkedContributors = contributors.map((c) => {
+      const lowerUsername = c.githubUsername.toLowerCase();
+      return {
+        githubUsername: c.githubUsername,
+        avatarUrl: c.avatarUrl,
+        userId: userMap.get(lowerUsername) || null,
+        isLinked: userMap.has(lowerUsername),
+      };
+    });
 
     // Create project
     const project = await Project.create({

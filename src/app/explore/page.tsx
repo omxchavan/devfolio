@@ -8,52 +8,38 @@ import User from "@/models/User";
 import { IProject } from "@/types";
 import { searchQuerySchema } from "@/lib/validations";
 import { Compass, Sparkles, LayoutGrid, Search } from "lucide-react";
-import { unstable_cache } from "next/cache";
-
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 interface ExplorePageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-const fetchProjects = unstable_cache(
-  async (params: Record<string, string | undefined>) => {
-    await connectDB();
-    const query = searchQuerySchema.parse(params);
-    const filter: Record<string, unknown> = {};
-    if (query.domain) filter.domain = query.domain;
-    if (query.tags) {
-      const tagList = query.tags.split(",").map((t: string) => t.trim().toLowerCase());
-      filter.tags = { $in: tagList };
-    }
-    if (query.q) {
-      filter.$or = [
-        { title: { $regex: query.q, $options: "i" } },
-        { tags: { $elemMatch: { $regex: query.q, $options: "i" } } },
-      ];
-    }
-    const sort: Record<string, 1 | -1> =
-      query.sort === "stars" ? { stars: -1, createdAt: -1 } : { createdAt: -1 };
-    const projects = await Project.find(filter)
-      .sort(sort)
-      .limit(50)
-      .populate({ path: "owner", model: User, select: "name image githubUsername prn year" })
-      .lean();
-    return JSON.parse(JSON.stringify(projects)) as IProject[];
-  },
-  ["explore-projects"],
-  { revalidate: 3600, tags: ["projects"] }
-);
+const fetchProjects = async (params: Record<string, string | undefined>) => {
+  await connectDB();
+  const query = searchQuerySchema.parse(params);
+  const filter: Record<string, unknown> = {};
+  if (query.domain) filter.domain = query.domain;
+  if (query.tags) {
+    const tagList = query.tags.split(",").map((t: string) => t.trim().toLowerCase());
+    filter.tags = { $in: tagList };
+  }
+  if (query.q) {
+    filter.$or = [
+      { title: { $regex: query.q, $options: "i" } },
+      { tags: { $elemMatch: { $regex: query.q, $options: "i" } } },
+    ];
+  }
+  const sort: Record<string, 1 | -1> =
+    query.sort === "stars" ? { stars: -1, createdAt: -1 } : { createdAt: -1 };
+  const projects = await Project.find(filter)
+    .sort(sort)
+    .limit(50)
+    .populate({ path: "owner", model: User, select: "name image githubUsername prn year" })
+    .lean();
+  return JSON.parse(JSON.stringify(projects)) as IProject[];
+};
 
 const getCachedFilteredProjects = async (params: Record<string, string | undefined>) => {
-  // Serialize params deterministically for the cache key
-  const queryObj: Record<string, string> = {};
-  for (const key of Object.keys(params).sort()) {
-    if (params[key]) queryObj[key] = params[key] as string;
-  }
-  const cacheKey = new URLSearchParams(queryObj).toString();
-  
-  // We use the serialized key to ensure different filters have different cache entries
   return fetchProjects(params);
 };
 

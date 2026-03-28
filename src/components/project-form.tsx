@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DOMAINS } from "@/lib/constants";
+import { DOMAINS, COMMON_TAGS } from "@/lib/constants";
 import { createProjectSchema, updateProjectSchema } from "@/lib/validations";
 import { Loader2, Plus, X, Upload, Link as LinkIcon, GitPullRequest, Sparkles } from "lucide-react";
 import { toast } from "sonner";
@@ -312,26 +312,56 @@ export function ProjectForm({ initialData }: ProjectFormProps) {
             <Button type="button" variant="secondary" size="icon" onClick={addTag} disabled={form.tags.length >= 10} className="h-11 w-11 rounded-xl shrink-0"><Plus className="h-5 w-5" /></Button>
           </div>
 
-          <div className="space-y-2">
-            <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Recommended Features</p>
-            <div className="flex flex-wrap gap-1.5">
-              {["react", "nextjs", "typescript", "python", "ml", "database", "api", "mobile", "ios"]
-                .filter(tag => !form.tags.includes(tag)).slice(0, 9).map(tag => (
-                  <Badge key={tag} variant="outline" className="cursor-pointer hover:bg-primary/10 hover:border-primary/40 rounded-lg py-1 px-3 text-[10px] font-bold uppercase tracking-tighter transition-all" onClick={() => form.tags.length < 10 && setForm({ ...form, tags: [...form.tags, tag] })}>
+          <div className="space-y-2 pt-2">
+            <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest px-1">Suggested for you</p>
+            <div className="flex flex-wrap gap-2">
+              {COMMON_TAGS
+                .filter(tag => !form.tags.includes(tag.toLowerCase()))
+                .map(tag => (
+                  <button
+                    key={tag}
+                    type="button"
+                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full border border-border/40 text-[10px] font-bold uppercase tracking-tight hover:bg-primary/10 hover:border-primary/40 hover:text-primary transition-all cursor-pointer bg-muted/20"
+                    onClick={() => {
+                      if (form.tags.length < 10) {
+                        setForm({ ...form, tags: [...form.tags, tag.toLowerCase()] });
+                      } else {
+                        toast.error("Maximum 10 tags allowed");
+                      }
+                    }}
+                  >
                     + {tag}
-                  </Badge>
-                ))}
+                  </button>
+                ))
+              }
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {form.tags.map((tag) => (
-              <Badge key={tag} className="gap-1.5 py-1 px-3 rounded-lg bg-primary/10 text-primary border-primary/20 hover:bg-destructive/10 hover:text-destructive transition-colors group/tag">
-                #{tag}
-                <X className="h-3 w-3 cursor-pointer opacity-40 group-hover/tag:opacity-100 pointer-events-auto" onClick={() => removeTag(tag)} />
-              </Badge>
-            ))}
-          </div>
+          {form.tags.length > 0 && (
+            <div className="space-y-2 pt-4 border-t border-border/20">
+              <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest px-1">Selected Tags ({form.tags.length}/10)</p>
+              <div className="flex flex-wrap gap-2">
+                {form.tags.map((tag) => (
+                  <Badge 
+                    key={tag} 
+                    className="gap-2 py-1.5 px-3 rounded-xl bg-primary/5 text-primary border-primary/20 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all select-none group"
+                  >
+                    <span className="font-bold lowercase tracking-tight">#{tag}</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeTag(tag);
+                      }}
+                      className="p-0.5 rounded-full hover:bg-destructive/20 transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

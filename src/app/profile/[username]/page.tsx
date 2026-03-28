@@ -10,30 +10,26 @@ import { authOptions } from "@/lib/auth";
 import { BookOpen, FolderGit2, Star, Clock } from "lucide-react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { unstable_cache } from "next/cache";
+export const dynamic = "force-dynamic";
 
 interface ProfilePageProps {
   params: Promise<{ username: string }>;
 }
 
-const getCachedUserProfile = unstable_cache(
-  async (username: string) => {
-    await connectDB();
-    const escaped = username.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const user = await User.findOne({ githubUsername: { $regex: new RegExp(`^${escaped}$`, 'i') } })
-      .populate({
-        path: "projects",
-        model: Project,
-        options: { sort: { createdAt: -1 } },
-        populate: { path: "owner", model: User, select: "name image githubUsername" },
-      })
-      .lean();
-    if (!user) return null;
-    return JSON.parse(JSON.stringify(user));
-  },
-  ["profile-detail"],
-  { revalidate: 60, tags: ["profiles"] }
-);
+const getCachedUserProfile = async (username: string) => {
+  await connectDB();
+  const escaped = username.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const user = await User.findOne({ githubUsername: { $regex: new RegExp(`^${escaped}$`, 'i') } })
+    .populate({
+      path: "projects",
+      model: Project,
+      options: { sort: { createdAt: -1 } },
+      populate: { path: "owner", model: User, select: "name image githubUsername" },
+    })
+    .lean();
+  if (!user) return null;
+  return JSON.parse(JSON.stringify(user));
+};
 
 export default async function ProfilePage(props: ProfilePageProps) {
   const session = await getServerSession(authOptions);

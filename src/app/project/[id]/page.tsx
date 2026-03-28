@@ -11,32 +11,28 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { sanitizeText } from "@/lib/sanitize";
 import { IProject, IUser } from "@/types";
-import { unstable_cache } from "next/cache";
+export const dynamic = "force-dynamic";
 import { ProjectCarousel } from "@/components/project-carousel";
 
 interface ProjectPageProps {
   params: Promise<{ id: string }>;
 }
 
-const getCachedProjectData = unstable_cache(
-  async (id: string) => {
-    try {
-      await connectDB();
-      const project = await Project.findById(id)
-        .populate({ path: "owner", model: User, select: "name image githubUsername bio socialLinks prn year" })
-        .lean();
-      if (!project) return null;
-      return JSON.parse(JSON.stringify(project)) as IProject;
-    } catch (error: any) {
-      if (error?.name === 'CastError' || error?.kind === 'ObjectId') {
-        return null;
-      }
-      throw error;
+const getCachedProjectData = async (id: string) => {
+  try {
+    await connectDB();
+    const project = await Project.findById(id)
+      .populate({ path: "owner", model: User, select: "name image githubUsername bio socialLinks prn year" })
+      .lean();
+    if (!project) return null;
+    return JSON.parse(JSON.stringify(project)) as IProject;
+  } catch (error: any) {
+    if (error?.name === 'CastError' || error?.kind === 'ObjectId') {
+      return null;
     }
-  },
-  ["project-detail"],
-  { revalidate: 60, tags: ["projects"] }
-);
+    throw error;
+  }
+};
 
 export default async function ProjectPage(props: ProjectPageProps) {
   const session = await getServerSession(authOptions);

@@ -9,9 +9,9 @@ import { ProjectCard } from "@/components/project-card";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Plus, FolderGit2, Star, GitPullRequest, Globe } from "lucide-react";
 import Link from "next/link";
-import { cache } from "react";
+export const dynamic = "force-dynamic";
 
-const getCachedUserProjects = cache(async (userId: string) => {
+const getCachedUserProjects = async (userId: string) => {
   await connectDB();
   const projects = await Project.find({
     $or: [
@@ -23,7 +23,7 @@ const getCachedUserProjects = cache(async (userId: string) => {
     .populate({ path: "owner", model: User, select: "name image githubUsername" })
     .lean();
   return JSON.parse(JSON.stringify(projects)) as IProject[];
-});
+};
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);

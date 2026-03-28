@@ -65,7 +65,12 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
       router.push(`/profile/${initialData.githubUsername}`);
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Something went wrong");
+      const message = error instanceof Error ? error.message : "Something went wrong";
+      if (message.toLowerCase().includes("failed to fetch")) {
+        toast.error("Network Error: Please check your internet connection and try again.");
+      } else {
+        toast.error(message);
+      }
     } finally {
       setLoading(false);
     }

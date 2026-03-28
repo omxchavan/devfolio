@@ -10,12 +10,13 @@ import { sanitizeUserContent } from "@/lib/sanitize";
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const [session] = await Promise.all([
+      getServerSession(authOptions),
+      connectDB(),
+    ]);
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    await connectDB();
 
     const user = await User.findById(session.user.id)
       .populate({
@@ -41,14 +42,14 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const [session, body] = await Promise.all([
+      getServerSession(authOptions),
+      request.json(),
+      connectDB(),
+    ]);
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    await connectDB();
-
-    const body = await request.json();
     const validated = updateProfileSchema.parse(body);
     const sanitized = sanitizeUserContent(
       validated as unknown as Record<string, unknown>

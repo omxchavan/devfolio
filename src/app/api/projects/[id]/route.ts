@@ -39,12 +39,14 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const [session] = await Promise.all([
+      getServerSession(authOptions),
+      connectDB(),
+    ]);
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await connectDB();
     const { id } = await params;
 
     const project = await Project.findById(id);
@@ -56,13 +58,14 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Remove project from all users' project arrays
-    await User.updateMany(
-      { projects: project._id },
-      { $pull: { projects: project._id } }
-    );
-
-    await Project.findByIdAndDelete(id);
+    // Remove project from users and delete in parallel
+    await Promise.all([
+      User.updateMany(
+        { projects: project._id },
+        { $pull: { projects: project._id } }
+      ),
+      Project.findByIdAndDelete(id),
+    ]);
 
     revalidateTag("projects", "page");
     revalidateTag("profiles", "page");
@@ -82,18 +85,20 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    // Session + DB + params + body in parallel
+    const [session, , paramsData, body] = await Promise.all([
+      getServerSession(authOptions),
+      connectDB(),
+      params,
+      request.json(),
+    ]);
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await params;
-    const body = await request.json();
-    
+    const { id } = paramsData;
     const validated = updateProjectSchema.parse(body);
     const sanitized = sanitizeUserContent(validated as unknown as Record<string, unknown>);
-
-    await connectDB();
 
     const project = await Project.findById(id);
     if (!project) {

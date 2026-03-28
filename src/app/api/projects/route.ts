@@ -81,7 +81,13 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    // Run session check, DB connect, and body parse in parallel
+    const [session, , body] = await Promise.all([
+      getServerSession(authOptions),
+      connectDB(),
+      request.json(),
+    ]);
+
     if (!session?.user?.id) {
       console.warn("Project submission attempt failed: Missing session.user.id", { email: session?.user?.email });
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -94,10 +100,6 @@ export async function POST(request: Request) {
         { status: 403 }
       );
     }
-
-    await connectDB();
-
-    const body = await request.json();
     const validated = createProjectSchema.parse(body);
     const sanitized = sanitizeUserContent(
       validated as unknown as Record<string, unknown>
@@ -112,22 +114,21 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check for duplicate GitHub repo
-    const existingProject = await Project.findOne({ githubRepo: sanitized.githubRepo }).lean();
+    // Run duplicate check and GitHub API fetches in parallel
+    const [existingProject, repoDetails, contributors, languages, readme] = await Promise.all([
+      Project.findOne({ githubRepo: sanitized.githubRepo }).lean(),
+      fetchRepoDetails(parsed.owner, parsed.repo),
+      fetchContributors(parsed.owner, parsed.repo),
+      fetchLanguages(parsed.owner, parsed.repo),
+      fetchReadme(parsed.owner, parsed.repo),
+    ]);
+
     if (existingProject) {
       return NextResponse.json(
         { error: "This GitHub repository has already been submitted as a project" },
         { status: 409 }
       );
     }
-
-    // Fetch GitHub data
-    const [repoDetails, contributors, languages, readme] = await Promise.all([
-      fetchRepoDetails(parsed.owner, parsed.repo),
-      fetchContributors(parsed.owner, parsed.repo),
-      fetchLanguages(parsed.owner, parsed.repo),
-      fetchReadme(parsed.owner, parsed.repo),
-    ]);
 
     // Link contributors to existing users
     const contributorUsernames = contributors.map((c) => c.githubUsername);
@@ -168,22 +169,27 @@ export async function POST(request: Request) {
       readmeExcerpt: readme,
     });
 
-    // Add project to owner's profile
-    await User.findByIdAndUpdate(session.user.id, {
-      $addToSet: { projects: project._id },
-    });
+    // Update owner and contributor profiles in parallel
+    const profileUpdates: Promise<any>[] = [
+      User.findByIdAndUpdate(session.user.id, {
+        $addToSet: { projects: project._id },
+      }),
+    ];
 
-    // Add project to linked contributors' profiles
     const linkedUserIds = linkedContributors
       .filter((c) => c.isLinked && c.userId)
       .map((c) => c.userId);
 
     if (linkedUserIds.length > 0) {
-      await User.updateMany(
-        { _id: { $in: linkedUserIds } },
-        { $addToSet: { projects: project._id } }
+      profileUpdates.push(
+        User.updateMany(
+          { _id: { $in: linkedUserIds } },
+          { $addToSet: { projects: project._id } }
+        )
       );
     }
+
+    await Promise.all(profileUpdates);
 
     // Bust server caches so explore/profile pages update immediately
     revalidateTag("projects", "page");

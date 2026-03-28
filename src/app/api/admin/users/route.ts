@@ -6,12 +6,13 @@ import User from "@/models/User";
 
 export async function GET(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const [session] = await Promise.all([
+      getServerSession(authOptions),
+      connectDB(),
+    ]);
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    await connectDB();
 
     // Check admin role
     const currentUser = await User.findById(session.user.id).select("role").lean();

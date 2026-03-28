@@ -320,7 +320,7 @@ export function ProjectForm({ initialData }: ProjectFormProps) {
             {form.tags.map((tag) => (
               <Badge key={tag} className="gap-1.5 py-1 px-3 rounded-lg bg-primary/10 text-primary border-primary/20 hover:bg-destructive/10 hover:text-destructive transition-colors group/tag">
                 #{tag}
-                <X className="h-3 w-3 cursor-pointer opacity-40 group-hover/tag:opacity-100" onClick={() => removeTag(tag)} />
+                <X className="h-3 w-3 cursor-pointer opacity-40 group-hover/tag:opacity-100 pointer-events-auto" onClick={() => removeTag(tag)} />
               </Badge>
             ))}
           </div>

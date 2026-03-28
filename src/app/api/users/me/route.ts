@@ -64,7 +64,9 @@ export async function PUT(request: Request) {
     await user.save();
 
     revalidateTag("profiles", "page");
+    revalidatePath("/");
     revalidatePath("/dashboard");
+    revalidatePath("/explore");
     revalidatePath(`/profile/${user.githubUsername}`);
 
     return NextResponse.json(user);

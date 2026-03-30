@@ -29,7 +29,7 @@ export const createProjectSchema = z.object({
     .default([]),
   images: z
     .array(z.string().url())
-    .max(5, "Maximum 5 images allowed")
+    .max(3, "Maximum 3 images allowed")
     .default([]),
 });
 

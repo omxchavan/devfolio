@@ -56,7 +56,7 @@ export function ProjectForm({ initialData }: ProjectFormProps) {
   }
 
   async function uploadImages(files: FileList) {
-    const remainingSlots = 5 - form.images.length;
+    const remainingSlots = 3 - form.images.length;
     if (remainingSlots <= 0) return;
 
     const filesToUpload = Array.from(files).slice(0, remainingSlots);
@@ -242,7 +242,7 @@ export function ProjectForm({ initialData }: ProjectFormProps) {
               </div>
             )}
 
-            {form.images.length < 5 && (
+            {form.images.length < 3 && (
               <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border/50 rounded-2xl cursor-pointer hover:bg-primary/5 hover:border-primary/50 transition-all duration-300 group">
                 <div className="flex flex-col items-center gap-2">
                   {imageUploading ? (
@@ -254,7 +254,7 @@ export function ProjectForm({ initialData }: ProjectFormProps) {
                       </div>
                       <div className="text-center">
                         <p className="text-[11px] font-extrabold uppercase tracking-tight">Select Screenshots</p>
-                        <p className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest mt-0.5">Multiple Allowed • Max 5</p>
+                        <p className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest mt-0.5">Multiple Allowed • Max 3</p>
                       </div>
                     </>
                   )}
@@ -266,7 +266,7 @@ export function ProjectForm({ initialData }: ProjectFormProps) {
               </label>
             )}
             <p className="text-[10px] text-muted-foreground font-bold px-1 uppercase tracking-widest">
-              {5 - form.images.length} slots remaining
+              {3 - form.images.length} slots remaining
             </p>
           </CardContent>
         </Card>

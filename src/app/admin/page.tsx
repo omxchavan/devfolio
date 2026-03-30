@@ -71,6 +71,8 @@ export default async function AdminPage(props: { searchParams: Promise<{ tab?: s
     }));
   }
 
+  const totalProjectsCount = await Project.countDocuments();
+
   return (
     <div className="container mx-auto px-4 py-10 max-w-6xl selection:bg-primary/20">
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
@@ -118,7 +120,7 @@ export default async function AdminPage(props: { searchParams: Promise<{ tab?: s
         {/* Tab Content */}
         <div className="mt-6">
           {currentTab === "users" ? (
-            <AdminUsersTable initialUsers={usersData} />
+            <AdminUsersTable initialUsers={usersData} totalProjectsCount={totalProjectsCount} />
           ) : (
             <AdminProjectsTable initialProjects={projectsData} />
           )}

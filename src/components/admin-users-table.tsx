@@ -32,9 +32,10 @@ interface AdminUser {
 
 interface AdminUsersTableProps {
   initialUsers: AdminUser[];
+  totalProjectsCount: number;
 }
 
-export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
+export function AdminUsersTable({ initialUsers, totalProjectsCount }: AdminUsersTableProps) {
   const [search, setSearch] = useState("");
   const [yearFilter, setYearFilter] = useState("");
   const [sortField, setSortField] = useState<"name" | "prn" | "year" | "projects" | "date">("date");
@@ -149,7 +150,7 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
           <div className="flex items-center justify-center gap-1.5 text-muted-foreground mb-1">
             <FolderGit2 className="h-4 w-4" />
           </div>
-          <p className="text-2xl font-bold">{totalProjects}</p>
+          <p className="text-2xl font-bold">{totalProjectsCount}</p>
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Total Projects</p>
         </div>
         {ACADEMIC_YEARS.map((y) => (

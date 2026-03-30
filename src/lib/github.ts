@@ -20,6 +20,15 @@ interface GitHubLanguages {
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
+export class GitHubError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+    this.name = "GitHubError";
+  }
+}
+
 async function githubFetch<T>(url: string): Promise<T> {
   const headers: HeadersInit = {
     Accept: "application/vnd.github.v3+json",
@@ -37,12 +46,12 @@ async function githubFetch<T>(url: string): Promise<T> {
 
   if (!response.ok) {
     if (response.status === 403) {
-      throw new Error("GitHub API rate limit exceeded. Please try again later.");
+      throw new GitHubError("GitHub API rate limit exceeded. Please try again later.", 403);
     }
     if (response.status === 404) {
-      throw new Error("Repository not found. Please check the URL.");
+      throw new GitHubError("Repository not found. Please check the URL.", 404);
     }
-    throw new Error(`GitHub API error: ${response.status}`);
+    throw new GitHubError(`GitHub API error: ${response.status}`, response.status);
   }
 
   return response.json() as Promise<T>;

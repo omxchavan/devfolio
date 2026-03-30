@@ -114,6 +114,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (parsed.owner.toLowerCase() !== session.user.githubUsername.toLowerCase()) {
+      return NextResponse.json(
+        { error: `You can only submit projects from your own GitHub account (@${session.user.githubUsername}). If this is a group project, ensure you are the repository owner.` },
+        { status: 403 }
+      );
+    }
+
     // 1. Fetch data in parallel
     const [existingProject, repoDetails, contributors, languages, readme] = await Promise.all([
       Project.findOne({ githubRepo: sanitized.githubRepo }).lean(),
@@ -192,17 +199,19 @@ export async function POST(request: Request) {
     revalidatePath(`/profile/${session.user.githubUsername}`);
 
     return NextResponse.json(project, { status: 201 });
-  } catch (error) {
-    if (error instanceof Error && error.name === "ZodError") {
+  } catch (error: any) {
+    if (error.name === "ZodError" || error.errors) {
       return NextResponse.json(
         { error: "Validation failed", details: error },
         { status: 400 }
       );
     }
+    
     console.error("Error creating project:", error);
+    const message = error instanceof Error ? error.message : "Failed to create project";
     return NextResponse.json(
-      { error: "Failed to create project" },
-      { status: 500 }
+      { error: message },
+      { status: error.status || 500 }
     );
   }
 }

@@ -123,11 +123,13 @@ export async function PUT(
     revalidatePath(`/project/${id}`);
 
     return NextResponse.json(project);
-  } catch (error) {
-    if (error instanceof Error && error.name === "ZodError") {
+    return NextResponse.json(project);
+  } catch (error: any) {
+    if (error.name === "ZodError" || error.errors) {
       return NextResponse.json({ error: "Validation failed", details: error }, { status: 400 });
     }
     console.error("Error updating project:", error);
-    return NextResponse.json({ error: "Failed to update project" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Failed to update project";
+    return NextResponse.json({ error: message }, { status: error.status || 500 });
   }
 }

@@ -191,8 +191,8 @@ export async function POST(request: Request) {
     await Promise.all(profileUpdates);
 
     // 4. Revalidate
-    revalidateTag("projects", "page");
-    revalidateTag("profiles", "page");
+    revalidateTag("projects", "max");
+    revalidateTag("profiles", "max");
     revalidatePath("/");
     revalidatePath("/dashboard");
     revalidatePath("/explore");

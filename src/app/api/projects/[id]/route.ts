@@ -67,8 +67,8 @@ export async function DELETE(
       Project.findByIdAndDelete(id),
     ]);
 
-    revalidateTag("projects", "page");
-    revalidateTag("profiles", "page");
+    revalidateTag("projects", "max");
+    revalidateTag("profiles", "max");
     revalidatePath("/");
     revalidatePath("/dashboard");
     revalidatePath("/explore");
@@ -116,7 +116,7 @@ export async function PUT(
     project.set(sanitized);
     await project.save();
 
-    revalidateTag("projects", "page");
+    revalidateTag("projects", "max");
     revalidatePath("/");
     revalidatePath("/dashboard");
     revalidatePath("/explore");

@@ -2,7 +2,7 @@ import type { NextAuthOptions } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
-import { revalidateTag } from "next/cache";
+import { revalidateTag, revalidatePath } from "next/cache";
 
 function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -84,10 +84,36 @@ export const authOptions: NextAuthOptions = {
               arrayFilters: [{ "elem.githubUsername": { $regex: new RegExp(`^${escapedLogin}$`, 'i') } }]
             }
           );
+        }
 
-          // Bust caches so project/profile pages reflect the linking immediately
+        // --- NEW: Ownership Recovery Logic ---
+        // Find projects where the repo belongs to this user but the owner ID is different (orphaned)
+        const ownedProjects = await Project.find({
+          githubRepo: { $regex: new RegExp(`^https://github\\.com/${escapedLogin}/`, 'i') },
+          owner: { $ne: user._id }
+        });
+
+        if (ownedProjects.length > 0) {
+          const ownedIds = ownedProjects.map((p: any) => p._id);
+          
+          // Re-assign ownership to the new user document
+          await Project.updateMany(
+            { _id: { $in: ownedIds } },
+            { $set: { owner: user._id } }
+          );
+
+          // Add these projects to the user's project list
+          await User.findByIdAndUpdate(user._id, {
+            $addToSet: { projects: { $each: ownedIds } }
+          });
+        }
+
+        // Revalidate if any linking/recovery happened
+        if (projectsToLink.length > 0 || ownedProjects.length > 0) {
           revalidateTag("projects", "page");
           revalidateTag("profiles", "page");
+          revalidatePath("/");
+          revalidatePath("/dashboard");
         }
 
         return true;

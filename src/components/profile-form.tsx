@@ -118,31 +118,31 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="prn">PRN (Roll Number)</Label>
+              <Label htmlFor="prn">PRN (Roll Number) *</Label>
               <Input
                 id="prn"
                 placeholder="e.g. 72312345"
                 value={form.prn}
                 onChange={(e) => setForm({ ...form, prn: e.target.value })}
-                className={errors.prn ? "border-destructive" : ""}
+                className={errors.prn ? "border-destructive h-11 rounded-xl" : "h-11 rounded-xl"}
               />
-              {errors.prn && <p className="text-xs text-destructive">{errors.prn}</p>}
+              {errors.prn && <p className="text-[10px] font-bold text-destructive uppercase tracking-wide">{errors.prn}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="year">Academic Year</Label>
+              <Label htmlFor="year">Academic Year *</Label>
               <select
                 id="year"
                 value={form.year}
                 onChange={(e) => setForm({ ...form, year: e.target.value })}
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-ring"
+                className={`flex h-11 w-full rounded-xl border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-ring ${errors.year ? "border-destructive" : ""}`}
               >
                 <option value="">Select year</option>
                 {ACADEMIC_YEARS.map((y) => (
                   <option key={y} value={y}>{y}</option>
                 ))}
               </select>
-              {errors.year && <p className="text-xs text-destructive">{errors.year}</p>}
+              {errors.year && <p className="text-[10px] font-bold text-destructive uppercase tracking-wide">{errors.year}</p>}
             </div>
           </div>
         </CardContent>

@@ -233,7 +233,7 @@ export function ProjectForm({ initialData }: ProjectFormProps) {
               <div className="grid grid-cols-2 gap-2">
                 {form.images.map((url) => (
                   <div key={url} className="relative group aspect-video rounded-xl overflow-hidden border border-border/40">
-                    <img src={url} alt="Screenshot" className="h-full w-full object-cover" />
+                    <img src={url} alt="Screenshot" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                     <button type="button" onClick={() => removeImage(url)} className="absolute top-1.5 right-1.5 p-1.5 rounded-full bg-destructive/90 text-white opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100 shadow-lg">
                       <X className="h-3 w-3" />
                     </button>

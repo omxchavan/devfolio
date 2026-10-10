@@ -90,6 +90,9 @@ export function ProjectCarousel({
             <img
               src={transformImage(img)}
               alt={`${title} - image ${i + 1}`}
+              loading={i === 0 ? "eager" : "lazy"}
+              decoding="async"
+              draggable={false}
               className="h-full w-full object-contain pointer-events-none"
             />
           </div>

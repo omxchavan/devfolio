@@ -4,7 +4,7 @@ import User from "@/models/User";
 import Project from "@/models/Project";
 import { ProfileCard } from "@/components/profile-card";
 import { ProjectCard } from "@/components/project-card";
-import GithubCalendar from "@/components/github-calendar";
+import GithubCalendar from "@/components/github-calendar-lazy";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { BookOpen, FolderGit2, Star, Clock } from "lucide-react";

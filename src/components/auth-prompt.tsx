@@ -6,23 +6,7 @@ import { signIn, useSession } from "next-auth/react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { GitPullRequest, Loader2 } from "lucide-react";
-
-// Only ever returns a same-origin relative path, so it is safe to use as a
-// sign-in redirect target (prevents open-redirect abuse).
-export function sanitizeCallbackUrl(url: string | null): string | null {
-  if (!url) return null;
-  let path = url;
-  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(url)) {
-    try {
-      const parsed = new URL(url);
-      path = `${parsed.pathname}${parsed.search}${parsed.hash}`;
-    } catch {
-      return null;
-    }
-  }
-  if (!path.startsWith("/") || path.startsWith("//")) return null;
-  return path;
-}
+import { sanitizeCallbackUrl } from "@/lib/callback-url";
 
 const OAUTH_ERROR_MESSAGES: Record<string, string> = {
   OAuthSignin: "Could not start the GitHub sign-in flow. Please try again.",

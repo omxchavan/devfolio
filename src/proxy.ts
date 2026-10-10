@@ -42,5 +42,8 @@ export default withAuth(
 );
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  // Skip auth token decoding for API routes, Next internals, and static assets
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\..*).*)",
+  ],
 };

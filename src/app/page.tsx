@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { ProjectCard } from "@/components/project-card";
 import { connectDB } from "@/lib/db";
@@ -7,6 +8,8 @@ import User from "@/models/User";
 import { IProject } from "@/types";
 import { ArrowRight, Code2, GraduationCap, Rocket, Users, Zap } from "lucide-react";
 import { unstable_cache } from "next/cache";
+
+export const revalidate = 60;
 
 const getCachedFeaturedProjects = unstable_cache(
   async () => {
@@ -22,9 +25,44 @@ const getCachedFeaturedProjects = unstable_cache(
   { revalidate: 60, tags: ["projects"] }
 );
 
-export default async function Home() {
+function FeaturedProjectsSkeleton() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="rounded-2xl border border-border/20 bg-card overflow-hidden animate-pulse">
+          <div className="aspect-video bg-muted/60" />
+          <div className="p-5 space-y-3">
+            <div className="h-5 w-3/4 rounded-md bg-muted/60" />
+            <div className="h-3 w-full rounded-md bg-muted/60" />
+            <div className="h-3 w-5/6 rounded-md bg-muted/60" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+async function FeaturedProjects() {
   const featuredProjects = await getCachedFeaturedProjects();
 
+  if (featuredProjects.length === 0) {
+    return (
+      <div className="text-center py-24 rounded-2xl border border-dashed border-border bg-muted/10">
+        <p className="text-muted-foreground font-medium italic">The gallery is currently being curated. Submit your project to be featured!</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      {featuredProjects.map((project) => (
+        <ProjectCard key={project._id.toString()} project={project as any} />
+      ))}
+    </div>
+  );
+}
+
+export default function Home() {
   return (
     <div className="flex flex-col pb-20">
       {/* Hero Section (Clean, non-glass) */}
@@ -148,17 +186,9 @@ export default async function Home() {
           </Link>
         </div>
 
-        {featuredProjects.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredProjects.map((project) => (
-              <ProjectCard key={project._id.toString()} project={project as any} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-24 rounded-2xl border border-dashed border-border bg-muted/10">
-            <p className="text-muted-foreground font-medium italic">The gallery is currently being curated. Submit your project to be featured!</p>
-          </div>
-        )}
+        <Suspense fallback={<FeaturedProjectsSkeleton />}>
+          <FeaturedProjects />
+        </Suspense>
       </section>
 
       {/* Department Banner */}

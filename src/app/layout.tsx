@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/components/auth-provider";
+import { AuthPrompt } from "@/components/auth-prompt";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Toaster } from "@/components/ui/sonner";
@@ -35,6 +37,9 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
             <Navbar />
+            <Suspense fallback={null}>
+              <AuthPrompt />
+            </Suspense>
             <main className="flex-1">{children}</main>
             <Footer />
             <Toaster position="bottom-right" />

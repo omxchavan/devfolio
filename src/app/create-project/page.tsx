@@ -10,7 +10,7 @@ export default async function CreateProjectPage() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
-    redirect("/?login=true");
+    redirect("/?login=true&callbackUrl=%2Fcreate-project");
   }
 
   return (

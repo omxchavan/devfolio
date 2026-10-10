@@ -12,6 +12,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { GitPullRequest, LogOut, LayoutDashboard, User, Settings } from "lucide-react";
 import Link from "next/link";
+import { sanitizeCallbackUrl } from "@/components/auth-prompt";
+
+function handleSignIn() {
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get("callbackUrl") || params.get("next");
+  const callbackUrl = sanitizeCallbackUrl(raw) || "/";
+  signIn("github", { callbackUrl });
+}
 
 export function AuthButton() {
   const { data: session, status } = useSession();
@@ -27,7 +35,7 @@ export function AuthButton() {
   if (!session) {
     return (
       <Button
-        onClick={() => signIn("github")}
+        onClick={handleSignIn}
         size="sm"
         className="gap-2 bg-gradient-to-r from-primary to-[oklch(0.60_0.22_300)] hover:opacity-90 transition-all duration-300 shadow-lg shadow-primary/20 hover:shadow-primary/30 text-white rounded-full px-5"
       >

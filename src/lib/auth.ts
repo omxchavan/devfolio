@@ -21,6 +21,10 @@ export const authOptions: NextAuthOptions = {
     GithubProvider({
       clientId: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      // GitHub returns an RFC 9207 `iss` parameter on the OAuth callback.
+      // Pin the issuer explicitly so openid-client can validate it (and to
+      // stay safe if the provider default changes).
+      issuer: "https://github.com/login/oauth",
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET,

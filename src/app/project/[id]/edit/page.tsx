@@ -15,13 +15,13 @@ interface EditProjectPageProps {
 }
 
 export default async function EditProjectPage(props: EditProjectPageProps) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   
   if (!session?.user?.id) {
-    redirect("/?login=true");
+    redirect(`/?login=true&callbackUrl=${encodeURIComponent(`/project/${params.id}/edit`)}`);
   }
 
-  const params = await props.params;
   await connectDB();
   const project = await Project.findById(params.id).lean();
 
